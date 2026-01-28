@@ -1,0 +1,18 @@
+name = "agentops-ingest"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# Environment variables (set via wrangler secret)
+# CLICKHOUSE_URL
+# CLICKHOUSE_PASSWORD
+# API_KEY_SECRET
+
+[vars]
+ENVIRONMENT = "development"
+
+# Rate limiting
+# [[unsafe.bindings]]
+# name = "RATE_LIMITER"
+# type = "ratelimit"
+# namespace_id = "agentops"
+# simple = { limit = 1000, period = 60 }
