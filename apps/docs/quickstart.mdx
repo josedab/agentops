@@ -1,0 +1,149 @@
+---
+title: Quickstart
+description: 'Get started with AgentOps in 5 minutes'
+---
+
+# Quickstart
+
+This guide will help you get AgentOps set up and tracking your first AI agent session.
+
+## Prerequisites
+
+- Node.js 18+ or Python 3.9+
+- An AgentOps account ([sign up free](https://app.agentops.dev/signup))
+
+## Step 1: Install the SDK
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install @agentops/sdk
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm add @agentops/sdk
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn add @agentops/sdk
+    ```
+  </Tab>
+  <Tab title="pip">
+    ```bash
+    pip install agentops
+    ```
+  </Tab>
+</Tabs>
+
+## Step 2: Get Your API Key
+
+1. Log in to the [AgentOps Dashboard](https://app.agentops.dev)
+2. Go to **Settings → API Keys**
+3. Click **Create API Key**
+4. Copy your new API key
+
+<Warning>
+  Keep your API key secret! Don't commit it to source control.
+</Warning>
+
+## Step 3: Initialize AgentOps
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { AgentOps } from '@agentops/sdk';
+
+    const agentops = new AgentOps({
+      apiKey: process.env.AGENTOPS_API_KEY!,
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from agentops import AgentOps
+
+    agentops = AgentOps(api_key=os.environ["AGENTOPS_API_KEY"])
+    ```
+  </Tab>
+</Tabs>
+
+## Step 4: Instrument Your Code
+
+### Option A: Automatic Instrumentation (Recommended)
+
+Wrap your LLM client for zero-code instrumentation:
+
+```typescript
+import OpenAI from 'openai';
+import { AgentOps } from '@agentops/sdk';
+
+const agentops = new AgentOps({ apiKey: process.env.AGENTOPS_API_KEY! });
+
+// Wrap the OpenAI client
+const openai = agentops.wrap(new OpenAI());
+
+// Use normally - everything is tracked automatically
+const response = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'Hello!' }],
+});
+```
+
+### Option B: Manual Instrumentation
+
+For more control, use the session API:
+
+```typescript
+import { AgentOps } from '@agentops/sdk';
+
+const agentops = new AgentOps({ apiKey: process.env.AGENTOPS_API_KEY! });
+
+// Start a session
+const session = agentops.startSession({
+  userId: 'user_123',
+  featureId: 'chat-agent',
+});
+
+// Track events
+session.trackPrompt('What is 2+2?', { role: 'user' });
+
+// ... call your LLM ...
+
+session.trackResponse('2+2 equals 4.', {
+  model: 'gpt-4o',
+  durationMs: 450,
+  tokens: { promptTokens: 10, completionTokens: 8, totalTokens: 18 },
+});
+
+// End the session
+session.end();
+```
+
+## Step 5: View in Dashboard
+
+1. Go to [app.agentops.dev](https://app.agentops.dev)
+2. Click on **Sessions** in the sidebar
+3. You should see your tracked session!
+
+<Frame>
+  <img src="/images/session-trace.png" alt="Session trace view" />
+</Frame>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Configuration" icon="gear" href="/sdk/configuration">
+    Learn about all configuration options
+  </Card>
+  <Card title="OpenAI Integration" icon="bolt" href="/integrations/openai">
+    Deep dive into OpenAI instrumentation
+  </Card>
+  <Card title="Cost Tracking" icon="dollar-sign" href="/features/cost-tracking">
+    Set up cost attribution
+  </Card>
+  <Card title="Alerts" icon="bell" href="/features/alerting">
+    Configure alerts for your agents
+  </Card>
+</CardGroup>

@@ -1,0 +1,74 @@
+---
+title: Introduction
+description: 'AI-native observability for agent applications'
+---
+
+# Welcome to AgentOps
+
+AgentOps is a purpose-built observability platform for AI agent applications. It provides comprehensive monitoring, debugging, and optimization capabilities specifically designed for the unique characteristics of AI-powered systems.
+
+## Why AgentOps?
+
+Traditional observability tools were built to answer questions like "did the API return 200?" and "what was the p99 latency?" They're fundamentally unable to answer the questions AI teams need:
+
+- **Why did the agent choose action A over action B?**
+- **What context was the model using when it made that decision?**
+- **Which prompts are performing poorly?**
+- **How much is this feature costing us in LLM spend?**
+- **Why did the agent hallucinate in this session?**
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Session Tracing" icon="magnifying-glass">
+    Visualize complete agent decision trees and debug issues in seconds, not hours.
+  </Card>
+  <Card title="Cost Attribution" icon="dollar-sign">
+    Track costs by feature, user, model, and time period with detailed breakdowns.
+  </Card>
+  <Card title="Tool Tracking" icon="wrench">
+    Monitor MCP tool execution with full input/output visibility.
+  </Card>
+  <Card title="Real-time Alerts" icon="bell">
+    Get notified of errors, cost spikes, and performance degradation instantly.
+  </Card>
+</CardGroup>
+
+## Quick Example
+
+```typescript
+import { AgentOps } from '@agentops/sdk';
+
+// Initialize with your API key
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY!,
+});
+
+// Wrap any LLM client for automatic instrumentation
+const client = agentops.wrap(yourLLMClient);
+
+// Everything is automatically tracked!
+const response = await client.chat.completions.create({
+  model: 'gpt-5',
+  messages: [{ role: 'user', content: 'Hello!' }],
+});
+```
+
+## Architecture
+
+AgentOps consists of three main components:
+
+1. **SDK** - Lightweight instrumentation library (<1% overhead)
+2. **Ingestion API** - Global edge-deployed event collection
+3. **Dashboard** - Real-time visualization and debugging
+
+## Getting Started
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running in 5 minutes
+  </Card>
+  <Card title="Concepts" icon="book" href="/concepts">
+    Learn the core concepts
+  </Card>
+</CardGroup>

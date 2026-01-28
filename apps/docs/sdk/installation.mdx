@@ -1,0 +1,103 @@
+---
+title: Installation
+description: 'Installing the AgentOps SDK'
+---
+
+# Installation
+
+AgentOps provides SDKs for TypeScript/JavaScript and Python.
+
+## TypeScript / JavaScript
+
+### Package Managers
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install @agentops/sdk
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm add @agentops/sdk
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn add @agentops/sdk
+    ```
+  </Tab>
+  <Tab title="bun">
+    ```bash
+    bun add @agentops/sdk
+    ```
+  </Tab>
+</Tabs>
+
+### Requirements
+
+- Node.js 18+ or Bun 1.0+
+- TypeScript 5.0+ (for TypeScript users)
+
+### Peer Dependencies
+
+The SDK has optional peer dependencies for auto-instrumentation:
+
+```json
+{
+  "peerDependencies": {
+    "openai": ">=4.0.0",
+    "@anthropic-ai/sdk": ">=0.30.0"
+  }
+}
+```
+
+Install the ones you need for your project.
+
+## Python
+
+### pip
+
+```bash
+pip install agentops
+```
+
+### Poetry
+
+```bash
+poetry add agentops
+```
+
+### Requirements
+
+- Python 3.9+
+
+## Verifying Installation
+
+### TypeScript
+
+```typescript
+import { AgentOps } from '@agentops/sdk';
+
+const agentops = new AgentOps({
+  apiKey: 'ao_test_key',
+  debug: true,
+});
+
+console.log('AgentOps initialized successfully!');
+```
+
+### Python
+
+```python
+from agentops import AgentOps
+
+agentops = AgentOps(api_key="ao_test_key", debug=True)
+print("AgentOps initialized successfully!")
+```
+
+## Next Steps
+
+<Card title="Configuration" icon="gear" href="/sdk/configuration">
+  Learn about all configuration options
+</Card>

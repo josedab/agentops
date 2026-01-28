@@ -1,0 +1,191 @@
+---
+title: Core Concepts
+description: 'Understanding AgentOps terminology and architecture'
+---
+
+# Core Concepts
+
+This page explains the key concepts in AgentOps and how they relate to your AI agent applications.
+
+## Sessions
+
+A **session** represents a complete interaction with an AI agent, from start to finish. Sessions contain multiple events and provide the top-level context for debugging and analytics.
+
+```typescript
+const session = agentops.startSession({
+  userId: 'user_123',        // Who initiated this session
+  featureId: 'chat-agent',   // Which feature/agent
+  tags: ['production'],      // Custom tags for filtering
+  metadata: {                // Arbitrary metadata
+    source: 'web',
+    version: '2.0',
+  },
+});
+```
+
+### Session Lifecycle
+
+```
+Session Start → Events... → Session End
+     │              │              │
+     ├─ userId      ├─ prompts     ├─ status
+     ├─ featureId   ├─ responses   ├─ duration
+     └─ metadata    ├─ tool calls  └─ total cost
+                    └─ errors
+```
+
+## Events
+
+**Events** are the atomic units of observability in AgentOps. Every prompt, response, tool call, and error is captured as an event.
+
+### Event Types
+
+| Type | Description |
+|------|-------------|
+| `session_start` | Session begins |
+| `session_end` | Session completes |
+| `prompt` | Message sent to the model |
+| `response` | Response from the model |
+| `tool_call` | Tool/function invocation |
+| `tool_result` | Tool execution result |
+| `error` | Error occurred |
+| `custom` | User-defined event |
+
+### Event Hierarchy
+
+Events can be nested using `parentEventId` to create a tree structure:
+
+```
+session_start
+├── prompt (system)
+├── prompt (user)
+│   └── response
+│       ├── tool_call (web_search)
+│       │   └── tool_result
+│       └── tool_call (calculator)
+│           └── tool_result
+├── prompt (user follow-up)
+│   └── response
+└── session_end
+```
+
+## Traces
+
+A **trace** is the visual representation of a session's event timeline. The AgentOps dashboard renders traces as expandable trees, showing:
+
+- Event sequence and timing
+- Prompt/response content
+- Tool inputs and outputs
+- Token usage and costs
+- Errors and their context
+
+## Cost Attribution
+
+AgentOps automatically calculates costs based on:
+
+- Model pricing (updated regularly)
+- Token usage (prompt + completion)
+- Custom pricing rules (for self-hosted models)
+
+Costs can be attributed to multiple dimensions:
+
+```
+Organization
+├── Project A
+│   ├── Feature: chat-agent ($1,234)
+│   │   ├── Model: gpt-4o ($890)
+│   │   └── Model: gpt-4o-mini ($344)
+│   └── Feature: code-review ($567)
+└── Project B
+    └── ...
+```
+
+## Metrics
+
+AgentOps aggregates events into metrics for dashboards and alerting:
+
+| Metric | Description |
+|--------|-------------|
+| `session_count` | Number of sessions |
+| `event_count` | Total events |
+| `error_rate` | % of sessions with errors |
+| `token_usage` | Total tokens consumed |
+| `cost` | Total spend in USD |
+| `latency_p50/p95/p99` | Response time percentiles |
+
+## Projects
+
+A **project** represents a logical grouping of sessions, typically corresponding to an application or service. Each project has:
+
+- Unique API keys
+- Separate dashboards
+- Independent alert configurations
+- Usage quotas
+
+## Tags and Metadata
+
+### Tags
+
+Tags are string labels for filtering and grouping:
+
+```typescript
+session.trackPrompt('Hello', {
+  tags: ['experiment-a', 'premium-user'],
+});
+```
+
+### Metadata
+
+Metadata is arbitrary key-value data attached to events:
+
+```typescript
+session.trackResponse('Response text', {
+  metadata: {
+    promptVersion: '2.1',
+    experimentId: 'exp-123',
+    userTier: 'premium',
+  },
+});
+```
+
+## MCP Tools
+
+AgentOps has first-class support for the **Model Context Protocol (MCP)**. Tool calls are automatically captured with:
+
+- Tool name and MCP server
+- Input parameters
+- Output/result
+- Execution duration
+- Success/error status
+
+```typescript
+// Automatically captured when using MCP-enabled clients
+session.trackToolCall('web_search', {
+  query: 'latest AI news',
+});
+
+session.trackToolResult('web_search', results, {
+  status: 'success',
+  durationMs: 234,
+});
+```
+
+## Data Retention
+
+| Tier | Retention |
+|------|-----------|
+| Free | 7 days |
+| Pro | 30 days |
+| Team | 90 days |
+| Enterprise | Custom |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Reference" icon="code" href="/sdk/typescript">
+    Full SDK documentation
+  </Card>
+  <Card title="Session Tracing" icon="magnifying-glass" href="/features/session-tracing">
+    Learn about debugging with traces
+  </Card>
+</CardGroup>

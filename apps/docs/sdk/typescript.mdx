@@ -1,0 +1,246 @@
+---
+title: TypeScript SDK
+description: 'Complete reference for the TypeScript SDK'
+---
+
+# TypeScript SDK
+
+The AgentOps TypeScript SDK provides automatic instrumentation for Node.js applications using AI agents.
+
+## Installation
+
+```bash
+npm install @agentops/sdk
+```
+
+## Initialization
+
+```typescript
+import { AgentOps } from '@agentops/sdk';
+
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY!,
+  
+  // Optional configuration
+  endpoint: 'https://ingest.agentops.dev',
+  flushInterval: 1000,      // ms between flushes
+  maxBatchSize: 100,        // events per batch
+  maxRetries: 3,            // retry attempts
+  disabled: false,          // disable tracking
+  debug: false,             // enable debug logging
+  defaultTags: ['prod'],    // tags for all events
+  defaultMetadata: {},      // metadata for all events
+});
+```
+
+## Automatic Instrumentation
+
+### wrap()
+
+Wrap any LLM client for zero-code instrumentation:
+
+```typescript
+// OpenAI
+import OpenAI from 'openai';
+const openai = agentops.wrap(new OpenAI());
+
+// Anthropic
+import Anthropic from '@anthropic-ai/sdk';
+const anthropic = agentops.wrap(new Anthropic());
+
+// With session metadata
+const client = agentops.wrap(new OpenAI(), {
+  userId: 'user_123',
+  featureId: 'chat-agent',
+});
+```
+
+### Supported Clients
+
+| Client | Auto-instrumented |
+|--------|------------------|
+| OpenAI | ✅ |
+| Anthropic | ✅ |
+| GitHub Copilot SDK | ✅ |
+| LangChain | ✅ (via callback) |
+| Custom | Manual tracking |
+
+## Manual Instrumentation
+
+### startSession()
+
+Start a new tracked session:
+
+```typescript
+const session = agentops.startSession({
+  userId: 'user_123',
+  featureId: 'chat-agent',
+  tags: ['production', 'premium'],
+  metadata: {
+    source: 'web',
+    version: '2.0',
+  },
+});
+```
+
+### Session Methods
+
+#### trackPrompt()
+
+Track a message sent to the model:
+
+```typescript
+const eventId = session.trackPrompt('What is 2+2?', {
+  role: 'user',           // 'user' | 'system' | 'assistant'
+  model: 'gpt-4o',
+  parentEventId: '...',   // for nesting
+  tags: ['math'],
+  metadata: { source: 'api' },
+});
+```
+
+#### trackResponse()
+
+Track a response from the model:
+
+```typescript
+session.trackResponse('2+2 equals 4.', {
+  model: 'gpt-4o',
+  durationMs: 450,
+  tokens: {
+    promptTokens: 10,
+    completionTokens: 8,
+    totalTokens: 18,
+  },
+  finishReason: 'stop',
+  parentEventId: promptEventId,
+});
+```
+
+#### trackToolCall()
+
+Track a tool/function invocation:
+
+```typescript
+const toolEventId = session.trackToolCall('web_search', {
+  query: 'latest news',
+}, {
+  mcpServer: 'search-mcp',
+  parentEventId: responseEventId,
+});
+```
+
+#### trackToolResult()
+
+Track a tool execution result:
+
+```typescript
+session.trackToolResult('web_search', {
+  results: [{ title: '...', url: '...' }],
+}, {
+  status: 'success',      // 'success' | 'error'
+  durationMs: 234,
+  parentEventId: toolEventId,
+});
+```
+
+#### trackError()
+
+Track an error:
+
+```typescript
+session.trackError(new Error('Rate limit exceeded'), {
+  durationMs: 100,
+  parentEventId: promptEventId,
+});
+```
+
+#### trackCustom()
+
+Track a custom event:
+
+```typescript
+session.trackCustom('user_feedback', {
+  rating: 5,
+  comment: 'Great response!',
+});
+```
+
+#### end()
+
+End the session:
+
+```typescript
+session.end({
+  status: 'completed',  // 'completed' | 'error'
+  errorMessage: '...',  // if status is 'error'
+});
+```
+
+### Session Properties
+
+```typescript
+// Get session ID
+console.log(session.sessionId);  // 'sess_abc123...'
+
+// Get current stats
+console.log(session.stats);
+// {
+//   eventCount: 5,
+//   promptTokens: 100,
+//   completionTokens: 80,
+//   totalTokens: 180,
+//   estimatedCost: 0.0234,
+//   durationMs: 2500,
+//   toolCalls: 2,
+//   errors: 0,
+// }
+```
+
+## Singleton API
+
+For simpler usage, use the singleton functions:
+
+```typescript
+import { init, wrap, startSession, shutdown } from '@agentops/sdk';
+
+// Initialize once at startup
+init({ apiKey: process.env.AGENTOPS_API_KEY! });
+
+// Use anywhere
+const client = wrap(new OpenAI());
+const session = startSession({ userId: 'user_123' });
+
+// Shutdown on exit
+await shutdown();
+```
+
+## Flushing Events
+
+Events are automatically flushed every `flushInterval` ms. To manually flush:
+
+```typescript
+await agentops.flush();
+```
+
+## Shutdown
+
+Always shutdown gracefully to ensure all events are sent:
+
+```typescript
+await agentops.shutdown();
+```
+
+## TypeScript Types
+
+Import types for full type safety:
+
+```typescript
+import type {
+  AgentOpsConfig,
+  SessionMetadata,
+  SessionStats,
+  AgentEvent,
+  TokenUsage,
+} from '@agentops/sdk';
+```

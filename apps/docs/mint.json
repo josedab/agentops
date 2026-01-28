@@ -1,0 +1,85 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "AgentOps Documentation",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373",
+    "anchors": {
+      "from": "#0D9373",
+      "to": "#07C983"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://app.agentops.dev"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://app.agentops.dev/signup"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "concepts"
+      ]
+    },
+    {
+      "group": "SDK",
+      "pages": [
+        "sdk/installation",
+        "sdk/typescript",
+        "sdk/python",
+        "sdk/configuration"
+      ]
+    },
+    {
+      "group": "Integrations",
+      "pages": [
+        "integrations/copilot-sdk",
+        "integrations/openai",
+        "integrations/anthropic",
+        "integrations/langchain"
+      ]
+    },
+    {
+      "group": "Features",
+      "pages": [
+        "features/session-tracing",
+        "features/cost-tracking",
+        "features/alerting",
+        "features/dashboards"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/overview",
+        "api-reference/authentication",
+        "api-reference/events",
+        "api-reference/sessions",
+        "api-reference/metrics"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/josedab/agentops",
+    "twitter": "https://twitter.com/agentops"
+  }
+}

@@ -1,0 +1,113 @@
+---
+title: API Overview
+description: 'AgentOps REST API reference'
+---
+
+# API Overview
+
+The AgentOps API allows you to programmatically access your observability data and manage your account.
+
+## Base URL
+
+```
+https://api.agentops.dev/v1
+```
+
+## Authentication
+
+All API requests require authentication using an API key:
+
+```bash
+curl -H "Authorization: Bearer ao_your_api_key" \
+  https://api.agentops.dev/v1/sessions
+```
+
+## Rate Limits
+
+| Tier | Requests/minute |
+|------|----------------|
+| Free | 60 |
+| Pro | 300 |
+| Team | 1,000 |
+| Enterprise | Custom |
+
+Rate limit headers are included in all responses:
+
+```
+X-RateLimit-Limit: 300
+X-RateLimit-Remaining: 299
+X-RateLimit-Reset: 1706479200
+```
+
+## Endpoints
+
+### Events
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/v1/events` | Ingest batch of events |
+| GET | `/v1/events` | Query events |
+
+### Sessions
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v1/sessions` | List sessions |
+| GET | `/v1/sessions/:id` | Get session details |
+| GET | `/v1/sessions/:id/events` | Get session events |
+
+### Metrics
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v1/metrics/overview` | Dashboard metrics |
+| GET | `/v1/metrics/timeseries` | Time series data |
+| GET | `/v1/metrics/costs` | Cost breakdown |
+
+### Alerts
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v1/alerts` | List alert configurations |
+| POST | `/v1/alerts` | Create alert |
+| PUT | `/v1/alerts/:id` | Update alert |
+| DELETE | `/v1/alerts/:id` | Delete alert |
+
+## Response Format
+
+All responses are JSON:
+
+```json
+{
+  "success": true,
+  "data": { ... },
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "limit": 50
+  }
+}
+```
+
+## Error Handling
+
+Errors return appropriate HTTP status codes:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_API_KEY",
+    "message": "The provided API key is invalid"
+  }
+}
+```
+
+| Status | Meaning |
+|--------|---------|
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 403 | Forbidden |
+| 404 | Not Found |
+| 429 | Rate Limited |
+| 500 | Server Error |

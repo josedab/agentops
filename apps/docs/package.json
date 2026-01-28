@@ -1,0 +1,13 @@
+{
+  "name": "@agentops/docs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "mintlify dev",
+    "build": "echo 'Docs built with Mintlify CLI - deploy via mintlify.com'",
+    "preview": "mintlify preview"
+  },
+  "devDependencies": {
+    "mintlify": "^4.0.0"
+  }
+}
