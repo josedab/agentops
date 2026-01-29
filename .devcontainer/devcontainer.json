@@ -1,0 +1,87 @@
+{
+  "name": "AgentOps Development",
+  "dockerComposeFile": [
+    "../infrastructure/docker/docker-compose.yml",
+    "docker-compose.devcontainer.yml"
+  ],
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20",
+      "nodeGypDependencies": true
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.21"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "golang.go",
+        "bradlc.vscode-tailwindcss",
+        "Prisma.prisma",
+        "mikestead.dotenv",
+        "streetsidesoftware.code-spell-checker",
+        "GitHub.copilot",
+        "eamodio.gitlens",
+        "usernamehw.errorlens"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.python"
+        },
+        "[go]": {
+          "editor.defaultFormatter": "golang.go"
+        },
+        "typescript.preferences.importModuleSpecifier": "relative",
+        "eslint.workingDirectories": [{ "mode": "auto" }],
+        "python.analysis.typeCheckingMode": "basic"
+      }
+    }
+  },
+
+  "postCreateCommand": "npm install -g pnpm@9 && pnpm install",
+  "postStartCommand": "echo '🚀 AgentOps dev environment ready! Run: pnpm dev'",
+
+  "forwardPorts": [3000, 3001, 8123, 5432, 6379, 9092, 8080],
+
+  "portsAttributes": {
+    "3000": { "label": "Web Dashboard", "onAutoForward": "notify" },
+    "3001": { "label": "API Server", "onAutoForward": "silent" },
+    "8123": { "label": "ClickHouse HTTP", "onAutoForward": "silent" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "silent" },
+    "6379": { "label": "Redis", "onAutoForward": "silent" },
+    "9092": { "label": "Redpanda/Kafka", "onAutoForward": "silent" },
+    "8080": { "label": "Redpanda Console", "onAutoForward": "silent" }
+  },
+
+  "remoteUser": "node",
+
+  "remoteEnv": {
+    "AGENTOPS_API_KEY": "ao_dev_local_key",
+    "DATABASE_URL": "postgresql://agentops:agentops_local@postgres:5432/agentops",
+    "REDIS_URL": "redis://redis:6379",
+    "CLICKHOUSE_URL": "http://clickhouse:8123",
+    "KAFKA_BROKERS": "redpanda:29092"
+  }
+}

@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  devcontainer:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    networks:
+      - agentops
+    depends_on:
+      - clickhouse
+      - postgres
+      - redis
+      - redpanda
+
+networks:
+  agentops:
+    external: true
+    name: docker_agentops
