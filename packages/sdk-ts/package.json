@@ -25,6 +25,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@agentops/shared": "workspace:*",
     "nanoid": "^5.0.0"
   },
   "devDependencies": {

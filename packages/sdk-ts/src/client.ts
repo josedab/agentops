@@ -1,30 +1,32 @@
 /**
  * AgentOps SDK - Main Client
- * 
+ *
  * The primary interface for instrumenting AI agent applications.
  */
 
-import type { 
-  AgentOpsConfig, 
-  ResolvedConfig, 
+import type {
+  AgentOpsConfig,
+  ResolvedConfig,
   AgentEvent,
   SessionMetadata,
   FlushResult,
-} from './types.js';
-import { EventBuffer } from './buffer.js';
-import { HttpTransport } from './transport.js';
-import { TrackedSession, SessionContext } from './session.js';
-import { 
-  generateSessionId, 
-  generateEventId, 
-  now, 
+} from "./types.js";
+import { EventBuffer } from "./buffer.js";
+import { HttpTransport } from "./transport.js";
+import { TrackedSession, SessionContext } from "./session.js";
+import {
+  generateSessionId,
+  generateEventId,
+  now,
   serializeError,
   extractTokenUsage,
   extractModel,
-} from './utils.js';
+} from "./utils.js";
+import { ConfigurationError } from "@agentops/shared";
+import { ContentExtractorChain } from "./extractors.js";
 
-const DEFAULT_CONFIG: Omit<ResolvedConfig, 'apiKey'> = {
-  endpoint: 'https://ingest.agentops.dev',
+const DEFAULT_CONFIG: Omit<ResolvedConfig, "apiKey"> = {
+  endpoint: "https://ingest.agentops.dev",
   flushInterval: 1000,
   maxBatchSize: 100,
   maxRetries: 3,
@@ -36,22 +38,22 @@ const DEFAULT_CONFIG: Omit<ResolvedConfig, 'apiKey'> = {
 
 /**
  * AgentOps client for AI observability
- * 
+ *
  * @example
  * ```typescript
  * import { AgentOps } from '@agentops/sdk';
- * 
+ *
  * const agentops = new AgentOps({ apiKey: process.env.AGENTOPS_API_KEY });
- * 
+ *
  * // Wrap any LLM client for automatic instrumentation
  * const client = agentops.wrap(yourLLMClient);
- * 
+ *
  * // Or use manual tracking
  * const session = agentops.startSession({ userId: 'user123' });
  * session.trackPrompt('Hello!');
  * session.trackResponse('Hi there!', { model: 'gpt-5', durationMs: 500 });
  * session.end();
- * 
+ *
  * // Shutdown gracefully
  * await agentops.shutdown();
  * ```
@@ -61,15 +63,22 @@ export class AgentOps {
   private readonly buffer: EventBuffer;
   private readonly transport: HttpTransport;
   private readonly sessions: Map<string, SessionContext> = new Map();
+  private readonly contentExtractor: ContentExtractorChain;
+  private shutdownHandler: (() => void) | null = null;
 
   constructor(config: AgentOpsConfig) {
-    if (!config.apiKey) {
-      throw new Error('AgentOps API key is required');
+    const apiKey = config.apiKey || process.env.AGENTOPS_API_KEY;
+    if (!apiKey) {
+      throw new ConfigurationError(
+        "AgentOps API key is required. Provide apiKey in config or set AGENTOPS_API_KEY environment variable.",
+        { missingField: "apiKey" },
+      );
     }
 
     this.config = {
       ...DEFAULT_CONFIG,
       ...config,
+      apiKey,
       defaultTags: config.defaultTags ?? [],
       defaultMetadata: config.defaultMetadata ?? {},
     };
@@ -87,8 +96,11 @@ export class AgentOps {
       onFlush: (events) => this.transport.send(events),
     });
 
+    // Initialize content extractor chain
+    this.contentExtractor = new ContentExtractorChain();
+
     if (this.config.debug) {
-      console.log('[AgentOps] Initialized', { 
+      console.log("[AgentOps] Initialized", {
         endpoint: this.config.endpoint,
         flushInterval: this.config.flushInterval,
       });
@@ -107,13 +119,13 @@ export class AgentOps {
 
   /**
    * Wrap an LLM client for automatic instrumentation.
-   * 
+   *
    * Supports:
    * - GitHub Copilot SDK
    * - OpenAI SDK
    * - Anthropic SDK
    * - Any client with similar patterns
-   * 
+   *
    * @example
    * ```typescript
    * const client = agentops.wrap(new CopilotClient());
@@ -130,21 +142,21 @@ export class AgentOps {
         const value = Reflect.get(target, prop, receiver);
 
         // Wrap known session creation methods
-        if (typeof value === 'function') {
+        if (typeof value === "function") {
           const methodName = String(prop);
-          
+
           // GitHub Copilot SDK
-          if (methodName === 'createSession') {
+          if (methodName === "createSession") {
             return this.wrapCreateSession(value.bind(target), metadata);
           }
-          
+
           // OpenAI chat completions
-          if (methodName === 'chat' || methodName === 'completions') {
+          if (methodName === "chat" || methodName === "completions") {
             return this.wrapOpenAI(value.bind(target), target, metadata);
           }
-          
+
           // Anthropic messages
-          if (methodName === 'messages') {
+          if (methodName === "messages") {
             return this.wrapAnthropic(value.bind(target), target, metadata);
           }
         }
@@ -156,18 +168,18 @@ export class AgentOps {
 
   /**
    * Start a new tracked session for manual instrumentation.
-   * 
+   *
    * @example
    * ```typescript
-   * const session = agentops.startSession({ 
+   * const session = agentops.startSession({
    *   userId: 'user123',
    *   featureId: 'chat-agent',
    *   tags: ['production'],
    * });
-   * 
+   *
    * // Track events...
    * session.trackPrompt('Hello!');
-   * 
+   *
    * // End when done
    * session.end();
    * ```
@@ -187,7 +199,7 @@ export class AgentOps {
     this.track({
       eventId: generateEventId(),
       sessionId,
-      type: 'session_start',
+      type: "session_start",
       userId: mergedMetadata.userId,
       featureId: mergedMetadata.featureId,
       timestamp: now(),
@@ -196,7 +208,7 @@ export class AgentOps {
     });
 
     if (this.config.debug) {
-      console.log('[AgentOps] Session started:', sessionId);
+      console.log("[AgentOps] Session started:", sessionId);
     }
 
     return new TrackedSession(sessionId, (e) => this.track(e), mergedMetadata);
@@ -205,7 +217,7 @@ export class AgentOps {
   /**
    * Track a custom event outside of a session.
    */
-  trackEvent(event: Omit<AgentEvent, 'eventId' | 'timestamp'>): void {
+  trackEvent(event: Omit<AgentEvent, "eventId" | "timestamp">): void {
     this.track({
       ...event,
       eventId: generateEventId(),
@@ -228,14 +240,17 @@ export class AgentOps {
    */
   async shutdown(): Promise<void> {
     if (this.config.debug) {
-      console.log('[AgentOps] Shutting down...');
+      console.log("[AgentOps] Shutting down...");
     }
+
+    // Remove shutdown handlers to prevent memory leaks
+    this.removeShutdownHandlers();
 
     await this.buffer.shutdown();
     this.sessions.clear();
 
     if (this.config.debug) {
-      console.log('[AgentOps] Shutdown complete');
+      console.log("[AgentOps] Shutdown complete");
     }
   }
 
@@ -250,15 +265,15 @@ export class AgentOps {
 
   private wrapCreateSession(
     original: Function,
-    metadata?: SessionMetadata
+    metadata?: SessionMetadata,
   ): Function {
     return async (config: unknown) => {
       const sessionId = generateSessionId();
       const mergedMetadata: SessionMetadata = {
         ...metadata,
         tags: [...this.config.defaultTags, ...(metadata?.tags ?? [])],
-        metadata: { 
-          ...this.config.defaultMetadata, 
+        metadata: {
+          ...this.config.defaultMetadata,
           ...metadata?.metadata,
           config,
         },
@@ -270,7 +285,7 @@ export class AgentOps {
       this.track({
         eventId: generateEventId(),
         sessionId,
-        type: 'session_start',
+        type: "session_start",
         userId: mergedMetadata.userId,
         featureId: mergedMetadata.featureId,
         timestamp: now(),
@@ -279,7 +294,7 @@ export class AgentOps {
       });
 
       if (this.config.debug) {
-        console.log('[AgentOps] Copilot session started:', sessionId);
+        console.log("[AgentOps] Copilot session started:", sessionId);
       }
 
       const session = await original(config);
@@ -287,8 +302,11 @@ export class AgentOps {
     };
   }
 
-  private wrapCopilotSession(session: unknown, context: SessionContext): unknown {
-    if (!session || typeof session !== 'object') {
+  private wrapCopilotSession(
+    session: unknown,
+    context: SessionContext,
+  ): unknown {
+    if (!session || typeof session !== "object") {
       return session;
     }
 
@@ -296,13 +314,13 @@ export class AgentOps {
       get: (target, prop, receiver) => {
         const value = Reflect.get(target, prop, receiver);
 
-        if (typeof value !== 'function') {
+        if (typeof value !== "function") {
           return value;
         }
 
         const methodName = String(prop);
 
-        if (methodName === 'sendAndWait' || methodName === 'send') {
+        if (methodName === "sendAndWait" || methodName === "send") {
           return this.wrapSendMethod(value.bind(target), context, methodName);
         }
 
@@ -314,7 +332,7 @@ export class AgentOps {
   private wrapSendMethod(
     original: Function,
     context: SessionContext,
-    _methodName: string
+    _methodName: string,
   ): Function {
     return async (message: unknown) => {
       const promptEventId = generateEventId();
@@ -324,8 +342,8 @@ export class AgentOps {
       this.track({
         eventId: promptEventId,
         sessionId: context.sessionId,
-        type: 'prompt',
-        role: 'user',
+        type: "prompt",
+        role: "user",
         content: message as string,
         timestamp: startTime,
       });
@@ -336,14 +354,14 @@ export class AgentOps {
 
         // Extract response data
         const tokens = extractTokenUsage(response);
-        const model = extractModel(response) ?? 'unknown';
+        const model = extractModel(response) ?? "unknown";
 
         // Track response
         this.track({
           eventId: generateEventId(),
           sessionId: context.sessionId,
           parentEventId: promptEventId,
-          type: 'response',
+          type: "response",
           content: this.extractContent(response),
           model,
           durationMs,
@@ -363,7 +381,7 @@ export class AgentOps {
           eventId: generateEventId(),
           sessionId: context.sessionId,
           parentEventId: promptEventId,
-          type: 'error',
+          type: "error",
           errorType: serialized.type,
           errorMessage: serialized.message,
           stackTrace: serialized.stack,
@@ -379,35 +397,38 @@ export class AgentOps {
   private wrapOpenAI(
     _original: Function,
     target: object,
-    metadata?: SessionMetadata
+    metadata?: SessionMetadata,
   ): unknown {
     const self = this;
-    
+
     return new Proxy(target, {
       get(t, prop, receiver) {
         const value = Reflect.get(t, prop, receiver);
-        
-        if (prop === 'completions' && typeof value === 'object') {
+
+        if (prop === "completions" && typeof value === "object") {
           return new Proxy(value as object, {
             get(completionsTarget, completionsProp, completionsReceiver) {
               const completionsValue = Reflect.get(
-                completionsTarget, 
-                completionsProp, 
-                completionsReceiver
+                completionsTarget,
+                completionsProp,
+                completionsReceiver,
               );
-              
-              if (completionsProp === 'create' && typeof completionsValue === 'function') {
+
+              if (
+                completionsProp === "create" &&
+                typeof completionsValue === "function"
+              ) {
                 return self.wrapOpenAICreate(
                   completionsValue.bind(completionsTarget),
-                  metadata
+                  metadata,
                 );
               }
-              
+
               return completionsValue;
             },
           });
         }
-        
+
         return value;
       },
     });
@@ -415,18 +436,21 @@ export class AgentOps {
 
   private wrapOpenAICreate(
     original: Function,
-    metadata?: SessionMetadata
+    metadata?: SessionMetadata,
   ): Function {
     return async (params: Record<string, unknown>) => {
       const session = this.startSession(metadata);
       const startTime = now();
 
       // Track prompts
-      const messages = params.messages as Array<{ role: string; content: string }>;
+      const messages = params.messages as Array<{
+        role: string;
+        content: string;
+      }>;
       if (messages) {
         for (const msg of messages) {
-          session.trackPrompt(msg.content, { 
-            role: msg.role as 'user' | 'system' | 'assistant',
+          session.trackPrompt(msg.content, {
+            role: msg.role as "user" | "system" | "assistant",
             model: params.model as string,
           });
         }
@@ -438,9 +462,9 @@ export class AgentOps {
         const tokens = extractTokenUsage(response);
 
         // Track response
-        const content = response.choices?.[0]?.message?.content ?? '';
+        const content = response.choices?.[0]?.message?.content ?? "";
         session.trackResponse(content, {
-          model: response.model ?? params.model as string,
+          model: response.model ?? (params.model as string),
           durationMs,
           tokens,
           finishReason: response.choices?.[0]?.finish_reason,
@@ -450,7 +474,7 @@ export class AgentOps {
         return response;
       } catch (error) {
         session.trackError(error, { durationMs: now() - startTime });
-        session.end({ status: 'error' });
+        session.end({ status: "error" });
         throw error;
       }
     };
@@ -459,18 +483,18 @@ export class AgentOps {
   private wrapAnthropic(
     _original: Function,
     target: object,
-    metadata?: SessionMetadata
+    metadata?: SessionMetadata,
   ): unknown {
     const self = this;
-    
+
     return new Proxy(target, {
       get(t, prop, receiver) {
         const value = Reflect.get(t, prop, receiver);
-        
-        if (prop === 'create' && typeof value === 'function') {
+
+        if (prop === "create" && typeof value === "function") {
           return self.wrapAnthropicCreate(value.bind(t), metadata);
         }
-        
+
         return value;
       },
     });
@@ -478,7 +502,7 @@ export class AgentOps {
 
   private wrapAnthropicCreate(
     original: Function,
-    metadata?: SessionMetadata
+    metadata?: SessionMetadata,
   ): Function {
     return async (params: Record<string, unknown>) => {
       const session = this.startSession(metadata);
@@ -486,18 +510,21 @@ export class AgentOps {
 
       // Track system prompt
       if (params.system) {
-        session.trackPrompt(params.system as string, { 
-          role: 'system',
+        session.trackPrompt(params.system as string, {
+          role: "system",
           model: params.model as string,
         });
       }
 
       // Track messages
-      const messages = params.messages as Array<{ role: string; content: string }>;
+      const messages = params.messages as Array<{
+        role: string;
+        content: string;
+      }>;
       if (messages) {
         for (const msg of messages) {
-          session.trackPrompt(msg.content, { 
-            role: msg.role as 'user' | 'assistant',
+          session.trackPrompt(msg.content, {
+            role: msg.role as "user" | "assistant",
             model: params.model as string,
           });
         }
@@ -511,13 +538,15 @@ export class AgentOps {
         const tokens = {
           promptTokens: response.usage?.input_tokens ?? 0,
           completionTokens: response.usage?.output_tokens ?? 0,
-          totalTokens: (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0),
+          totalTokens:
+            (response.usage?.input_tokens ?? 0) +
+            (response.usage?.output_tokens ?? 0),
         };
 
         // Track response
-        const content = response.content?.[0]?.text ?? '';
+        const content = response.content?.[0]?.text ?? "";
         session.trackResponse(content, {
-          model: response.model ?? params.model as string,
+          model: response.model ?? (params.model as string),
           durationMs,
           tokens,
           finishReason: response.stop_reason,
@@ -527,7 +556,7 @@ export class AgentOps {
         return response;
       } catch (error) {
         session.trackError(error, { durationMs: now() - startTime });
-        session.end({ status: 'error' });
+        session.end({ status: "error" });
         throw error;
       }
     };
@@ -536,12 +565,12 @@ export class AgentOps {
   private trackToolCalls(
     response: unknown,
     context: SessionContext,
-    parentEventId: string
+    parentEventId: string,
   ): void {
-    if (!response || typeof response !== 'object') return;
+    if (!response || typeof response !== "object") return;
 
     const resp = response as Record<string, unknown>;
-    
+
     // Check for tool_calls in response
     const toolCalls = resp.toolCalls ?? resp.tool_calls;
     if (!Array.isArray(toolCalls)) return;
@@ -553,8 +582,8 @@ export class AgentOps {
         eventId: generateEventId(),
         sessionId: context.sessionId,
         parentEventId,
-        type: 'tool_call',
-        toolName: String(tc.name ?? tcFunc?.name ?? 'unknown'),
+        type: "tool_call",
+        toolName: String(tc.name ?? tcFunc?.name ?? "unknown"),
         toolInput: tc.input ?? tc.arguments ?? tcFunc?.arguments,
         timestamp: now(),
       });
@@ -562,49 +591,34 @@ export class AgentOps {
   }
 
   private extractContent(response: unknown): string {
-    if (!response || typeof response !== 'object') {
-      return String(response);
-    }
-
-    const resp = response as Record<string, unknown>;
-
-    // Try common response formats
-    if (typeof resp.content === 'string') {
-      return resp.content;
-    }
-    
-    if (typeof resp.text === 'string') {
-      return resp.text;
-    }
-    
-    if (typeof resp.message === 'string') {
-      return resp.message;
-    }
-
-    // OpenAI format
-    if (resp.choices && Array.isArray(resp.choices)) {
-      const firstChoice = resp.choices[0] as Record<string, unknown> | undefined;
-      if (firstChoice?.message && typeof firstChoice.message === 'object') {
-        const msg = firstChoice.message as Record<string, unknown>;
-        if (typeof msg.content === 'string') {
-          return msg.content;
-        }
-      }
-    }
-
-    return JSON.stringify(response);
+    return this.contentExtractor.extract(response);
   }
 
   private setupShutdownHandlers(): void {
     // Only set up handlers in Node.js environment
-    if (typeof process !== 'undefined' && process.on) {
+    if (typeof process !== "undefined" && process.on) {
       const handler = () => {
         void this.shutdown();
       };
 
-      process.on('beforeExit', handler);
-      process.on('SIGINT', handler);
-      process.on('SIGTERM', handler);
+      this.shutdownHandler = handler;
+
+      process.on("beforeExit", handler);
+      process.on("SIGINT", handler);
+      process.on("SIGTERM", handler);
+    }
+  }
+
+  private removeShutdownHandlers(): void {
+    if (
+      typeof process !== "undefined" &&
+      process.removeListener &&
+      this.shutdownHandler
+    ) {
+      process.removeListener("beforeExit", this.shutdownHandler);
+      process.removeListener("SIGINT", this.shutdownHandler);
+      process.removeListener("SIGTERM", this.shutdownHandler);
+      this.shutdownHandler = null;
     }
   }
 }

@@ -2,7 +2,48 @@
  * AgentOps SDK - Utility Functions
  */
 
-import { nanoid } from 'nanoid';
+import { nanoid } from "nanoid";
+
+// Re-export shared utilities for convenience
+export { sleep, calculateBackoff } from "@agentops/shared";
+
+/**
+ * Clock interface for injectable time source.
+ * Enables deterministic testing by mocking time.
+ */
+export interface Clock {
+  now(): number;
+}
+
+/**
+ * Default system clock implementation
+ */
+export const systemClock: Clock = {
+  now: () => Date.now(),
+};
+
+/**
+ * Global clock instance - can be replaced for testing
+ */
+let _clock: Clock = systemClock;
+
+/**
+ * Set a custom clock for testing
+ * @param clock - Custom clock implementation
+ * @returns Previous clock (for restoration)
+ */
+export function setClock(clock: Clock): Clock {
+  const prev = _clock;
+  _clock = clock;
+  return prev;
+}
+
+/**
+ * Reset clock to system default
+ */
+export function resetClock(): void {
+  _clock = systemClock;
+}
 
 /**
  * Generate a unique session ID
@@ -19,10 +60,11 @@ export function generateEventId(): string {
 }
 
 /**
- * Get current timestamp in milliseconds
+ * Get current timestamp in milliseconds.
+ * Uses injectable clock for testability.
  */
 export function now(): number {
-  return Date.now();
+  return _clock.now();
 }
 
 /**
@@ -40,16 +82,16 @@ export function serializeError(error: unknown): {
       stack: error.stack,
     };
   }
-  
-  if (typeof error === 'string') {
+
+  if (typeof error === "string") {
     return {
-      type: 'Error',
+      type: "Error",
       message: error,
     };
   }
-  
+
   return {
-    type: 'UnknownError',
+    type: "UnknownError",
     message: String(error),
   };
 }
@@ -61,20 +103,20 @@ export function safeStringify(obj: unknown, maxLength = 10000): string {
   try {
     const seen = new WeakSet();
     const result = JSON.stringify(obj, (_, value) => {
-      if (typeof value === 'object' && value !== null) {
+      if (typeof value === "object" && value !== null) {
         if (seen.has(value)) {
-          return '[Circular]';
+          return "[Circular]";
         }
         seen.add(value);
       }
       return value;
     });
-    
+
     if (result && result.length > maxLength) {
-      return result.slice(0, maxLength) + '...[truncated]';
+      return result.slice(0, maxLength) + "...[truncated]";
     }
-    
-    return result ?? '';
+
+    return result ?? "";
   } catch {
     return String(obj);
   }
@@ -85,74 +127,55 @@ export function safeStringify(obj: unknown, maxLength = 10000): string {
  */
 export function deepMerge<T extends Record<string, unknown>>(
   target: T,
-  source: Partial<T>
+  source: Partial<T>,
 ): T {
   const result = { ...target };
-  
+
   for (const key of Object.keys(source) as (keyof T)[]) {
     const sourceValue = source[key];
     const targetValue = result[key];
-    
+
     if (
       sourceValue !== undefined &&
-      typeof sourceValue === 'object' &&
+      typeof sourceValue === "object" &&
       sourceValue !== null &&
       !Array.isArray(sourceValue) &&
-      typeof targetValue === 'object' &&
+      typeof targetValue === "object" &&
       targetValue !== null &&
       !Array.isArray(targetValue)
     ) {
       result[key] = deepMerge(
         targetValue as Record<string, unknown>,
-        sourceValue as Record<string, unknown>
+        sourceValue as Record<string, unknown>,
       ) as T[keyof T];
     } else if (sourceValue !== undefined) {
       result[key] = sourceValue as T[keyof T];
     }
   }
-  
+
   return result;
-}
-
-/**
- * Sleep for a given duration
- */
-export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Exponential backoff calculation
- */
-export function calculateBackoff(
-  attempt: number,
-  baseDelay = 1000,
-  maxDelay = 30000
-): number {
-  const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
-  // Add jitter (±25%)
-  const jitter = delay * 0.25 * (Math.random() * 2 - 1);
-  return Math.round(delay + jitter);
 }
 
 /**
  * Extract token usage from various LLM response formats
  */
-export function extractTokenUsage(response: unknown): {
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-} | undefined {
-  if (!response || typeof response !== 'object') {
+export function extractTokenUsage(response: unknown):
+  | {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    }
+  | undefined {
+  if (!response || typeof response !== "object") {
     return undefined;
   }
-  
+
   const resp = response as Record<string, unknown>;
-  
+
   // OpenAI format
-  if (resp.usage && typeof resp.usage === 'object') {
+  if (resp.usage && typeof resp.usage === "object") {
     const usage = resp.usage as Record<string, unknown>;
-    if ('prompt_tokens' in usage || 'completion_tokens' in usage) {
+    if ("prompt_tokens" in usage || "completion_tokens" in usage) {
       return {
         promptTokens: Number(usage.prompt_tokens ?? 0),
         completionTokens: Number(usage.completion_tokens ?? 0),
@@ -160,9 +183,9 @@ export function extractTokenUsage(response: unknown): {
       };
     }
   }
-  
+
   // Anthropic format
-  if ('input_tokens' in resp || 'output_tokens' in resp) {
+  if ("input_tokens" in resp || "output_tokens" in resp) {
     const inputTokens = Number(resp.input_tokens ?? 0);
     const outputTokens = Number(resp.output_tokens ?? 0);
     return {
@@ -171,7 +194,7 @@ export function extractTokenUsage(response: unknown): {
       totalTokens: inputTokens + outputTokens,
     };
   }
-  
+
   return undefined;
 }
 
@@ -179,15 +202,15 @@ export function extractTokenUsage(response: unknown): {
  * Extract model name from various LLM response formats
  */
 export function extractModel(response: unknown): string | undefined {
-  if (!response || typeof response !== 'object') {
+  if (!response || typeof response !== "object") {
     return undefined;
   }
-  
+
   const resp = response as Record<string, unknown>;
-  
-  if (typeof resp.model === 'string') {
+
+  if (typeof resp.model === "string") {
     return resp.model;
   }
-  
+
   return undefined;
 }
