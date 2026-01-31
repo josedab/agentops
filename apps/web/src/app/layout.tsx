@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   description: "AI-native observability for agent applications",
 };
 
+// When deploying with Clerk, wrap with ClerkProvider:
+// import { ClerkProvider } from "@clerk/nextjs";
+// and wrap the html element with <ClerkProvider>
+
 export default function RootLayout({
   children,
 }: {
