@@ -79,7 +79,7 @@ data "aws_availability_zones" "available" {
 # VPC
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
+  version = "~> 6.6"
 
   name = "agentops-${var.environment}"
   cidr = "10.0.0.0/16"
