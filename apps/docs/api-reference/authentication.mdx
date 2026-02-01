@@ -1,0 +1,88 @@
+---
+title: 'Authentication'
+description: 'Authenticate with the AgentOps API'
+---
+
+## API Keys
+
+AgentOps uses API keys for authentication. You can create and manage API keys in the [Dashboard](https://app.agentops.dev/settings/api-keys).
+
+## Using API Keys
+
+Include your API key in the `Authorization` header:
+
+```bash
+curl -H "Authorization: Bearer ao_your_api_key" \
+  https://api.agentops.dev/v1/sessions
+```
+
+## Key Formats
+
+AgentOps API keys follow this format:
+
+- **Ingest keys**: `ao_ingest_xxxxx` - For sending events from your application
+- **Read keys**: `ao_read_xxxxx` - For querying data
+- **Admin keys**: `ao_admin_xxxxx` - Full access (use with caution)
+
+## Scopes
+
+API keys can have different scopes:
+
+| Scope | Description |
+|-------|-------------|
+| `ingest` | Send events to AgentOps |
+| `read` | Query sessions, events, and metrics |
+| `write` | Create and update resources |
+| `admin` | Full access including key management |
+
+## Security Best Practices
+
+<Warning>
+Never expose your API keys in client-side code or public repositories.
+</Warning>
+
+1. **Use environment variables**: Store keys in environment variables, not in code.
+
+2. **Separate keys by environment**: Use different keys for development, staging, and production.
+
+3. **Use minimal scopes**: Create keys with only the scopes you need.
+
+4. **Rotate regularly**: Rotate keys periodically and after any potential exposure.
+
+5. **Monitor usage**: Review API key usage in the dashboard.
+
+## Key Rotation
+
+To rotate a key without downtime:
+
+1. Create a new API key with the same scopes
+2. Update your application to use the new key
+3. Verify the new key is working
+4. Revoke the old key
+
+## Example: TypeScript
+
+```typescript
+import { AgentOps } from '@agentops/sdk';
+
+// Don't do this!
+// const agentops = new AgentOps({ apiKey: 'ao_xxxxx' });
+
+// Do this instead
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY,
+});
+```
+
+## Example: Python
+
+```python
+import os
+import agentops
+
+# Don't do this!
+# agentops.init(api_key='ao_xxxxx')
+
+# Do this instead
+agentops.init(api_key=os.environ['AGENTOPS_API_KEY'])
+```

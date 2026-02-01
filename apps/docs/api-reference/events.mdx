@@ -1,0 +1,164 @@
+---
+title: 'Events API'
+description: 'Ingest and query events'
+---
+
+## Ingest Events
+
+<Card>
+  <strong>POST</strong> /v1/events
+</Card>
+
+Send a batch of events for ingestion.
+
+<Note>
+For production applications, use the SDK instead of the raw API. The SDK handles batching, retries, and error handling automatically.
+</Note>
+
+### Request Body
+
+```json
+{
+  "events": [
+    {
+      "sessionId": "sess_abc123",
+      "eventType": "prompt",
+      "timestamp": "2026-01-28T10:00:00Z",
+      "model": "gpt-4o",
+      "content": {
+        "messages": [
+          {"role": "user", "content": "Hello!"}
+        ]
+      },
+      "metadata": {
+        "version": "1.0.0"
+      },
+      "tags": ["production"]
+    }
+  ]
+}
+```
+
+### Event Types
+
+| Type | Description |
+|------|-------------|
+| `session_start` | Session started |
+| `session_end` | Session ended |
+| `prompt` | LLM prompt/request |
+| `response` | LLM response |
+| `tool_call` | Tool/function call initiated |
+| `tool_result` | Tool/function call result |
+| `error` | Error occurred |
+| `custom` | Custom event |
+
+### Event Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `sessionId` | string | Yes | Session identifier |
+| `eventType` | string | Yes | Event type |
+| `timestamp` | datetime | No | Event timestamp (defaults to now) |
+| `parentEventId` | string | No | Parent event for nesting |
+| `model` | string | No | Model used |
+| `content` | object | No | Event content/payload |
+| `tokens` | object | No | Token usage |
+| `cost` | number | No | Cost in USD |
+| `durationMs` | number | No | Duration in milliseconds |
+| `toolName` | string | No | Tool name (for tool events) |
+| `toolStatus` | string | No | Tool status (`pending`, `success`, `error`) |
+| `metadata` | object | No | Custom metadata |
+| `tags` | array | No | Tags for filtering |
+
+### Response
+
+```json
+{
+  "accepted": 1,
+  "rejected": 0,
+  "errors": []
+}
+```
+
+### Example
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer ao_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      {
+        "sessionId": "sess_abc123",
+        "eventType": "prompt",
+        "model": "gpt-4o",
+        "content": {"messages": [{"role": "user", "content": "Hello!"}]}
+      }
+    ]
+  }' \
+  https://api.agentops.dev/v1/events
+```
+
+---
+
+## Query Events
+
+<Card>
+  <strong>GET</strong> /v1/events
+</Card>
+
+Query events directly (outside of a session context).
+
+### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | number | Results per page (1-100) |
+| `offset` | number | Pagination offset |
+| `start` | datetime | Start of time range |
+| `end` | datetime | End of time range |
+| `range` | string | Relative time range |
+| `sessionId` | string | Filter by session |
+| `type` | string | Filter by event type |
+| `model` | string | Filter by model |
+| `userId` | string | Filter by user |
+| `featureId` | string | Filter by feature |
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "eventId": "evt_1",
+      "sessionId": "sess_abc123",
+      "eventType": "response",
+      "timestamp": "2026-01-28T10:00:01.5Z",
+      "model": "gpt-4o",
+      "content": {"content": "Hello! How can I help?"},
+      "tokens": {"prompt": 10, "completion": 15, "total": 25},
+      "cost": 0.000125,
+      "durationMs": 1500
+    }
+  ],
+  "pagination": {
+    "limit": 50,
+    "offset": 0,
+    "total": 500,
+    "hasMore": true
+  }
+}
+```
+
+---
+
+## Batch Limits
+
+| Plan | Max events/batch | Max batches/minute |
+|------|------------------|-------------------|
+| Free | 100 | 60 |
+| Pro | 1000 | 300 |
+| Team | 5000 | 600 |
+| Enterprise | Custom | Custom |
+
+Events exceeding the batch limit will be rejected with a 413 status code.

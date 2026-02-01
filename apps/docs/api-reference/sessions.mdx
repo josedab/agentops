@@ -1,0 +1,189 @@
+---
+title: 'Sessions API'
+description: 'Query and manage sessions'
+---
+
+## List Sessions
+
+<Card>
+  <strong>GET</strong> /v1/sessions
+</Card>
+
+Retrieve a list of sessions with optional filtering.
+
+### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | number | Results per page (1-100, default: 50) |
+| `offset` | number | Pagination offset (default: 0) |
+| `start` | datetime | Start of time range |
+| `end` | datetime | End of time range |
+| `range` | string | Relative time range (`1h`, `6h`, `24h`, `7d`, `30d`) |
+| `status` | string | Filter by status (`active`, `completed`, `error`) |
+| `userId` | string | Filter by user ID |
+| `featureId` | string | Filter by feature ID |
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "sessionId": "sess_abc123",
+      "projectId": "proj_1",
+      "userId": "user_1",
+      "featureId": "chat",
+      "status": "completed",
+      "eventCount": 15,
+      "totalTokens": 2500,
+      "totalCost": 0.0125,
+      "durationMs": 3500,
+      "models": ["gpt-4o"],
+      "tools": ["web_search", "calculator"],
+      "startedAt": "2026-01-28T10:00:00Z",
+      "endedAt": "2026-01-28T10:00:03.5Z"
+    }
+  ],
+  "pagination": {
+    "limit": 50,
+    "offset": 0,
+    "total": 1234,
+    "hasMore": true
+  }
+}
+```
+
+### Example
+
+```bash
+curl -H "Authorization: Bearer ao_your_api_key" \
+  "https://api.agentops.dev/v1/sessions?range=24h&status=completed&limit=10"
+```
+
+---
+
+## Get Session
+
+<Card>
+  <strong>GET</strong> /v1/sessions/:sessionId
+</Card>
+
+Retrieve details for a specific session.
+
+### Path Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sessionId` | string | The session ID |
+
+### Response
+
+```json
+{
+  "sessionId": "sess_abc123",
+  "projectId": "proj_1",
+  "userId": "user_1",
+  "featureId": "chat",
+  "status": "completed",
+  "eventCount": 15,
+  "totalTokens": 2500,
+  "totalCost": 0.0125,
+  "durationMs": 3500,
+  "models": ["gpt-4o"],
+  "tools": ["web_search", "calculator"],
+  "tags": ["production", "v2"],
+  "metadata": {
+    "version": "1.0.0"
+  },
+  "startedAt": "2026-01-28T10:00:00Z",
+  "endedAt": "2026-01-28T10:00:03.5Z"
+}
+```
+
+### Example
+
+```bash
+curl -H "Authorization: Bearer ao_your_api_key" \
+  "https://api.agentops.dev/v1/sessions/sess_abc123"
+```
+
+---
+
+## Get Session Events
+
+<Card>
+  <strong>GET</strong> /v1/sessions/:sessionId/events
+</Card>
+
+Retrieve all events for a session.
+
+### Path Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sessionId` | string | The session ID |
+
+### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | number | Results per page (1-100, default: 50) |
+| `offset` | number | Pagination offset (default: 0) |
+| `type` | string | Filter by event type |
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "eventId": "evt_1",
+      "sessionId": "sess_abc123",
+      "parentEventId": null,
+      "eventType": "prompt",
+      "timestamp": "2026-01-28T10:00:00Z",
+      "model": "gpt-4o",
+      "content": {
+        "messages": [
+          {"role": "user", "content": "Hello!"}
+        ]
+      },
+      "tokens": null,
+      "cost": null,
+      "durationMs": null
+    },
+    {
+      "eventId": "evt_2",
+      "sessionId": "sess_abc123",
+      "parentEventId": "evt_1",
+      "eventType": "response",
+      "timestamp": "2026-01-28T10:00:01.5Z",
+      "model": "gpt-4o",
+      "content": {
+        "content": "Hi! How can I help you today?"
+      },
+      "tokens": {
+        "prompt": 10,
+        "completion": 15,
+        "total": 25
+      },
+      "cost": 0.000125,
+      "durationMs": 1500
+    }
+  ],
+  "pagination": {
+    "limit": 50,
+    "offset": 0,
+    "total": 15,
+    "hasMore": false
+  }
+}
+```
+
+### Example
+
+```bash
+curl -H "Authorization: Bearer ao_your_api_key" \
+  "https://api.agentops.dev/v1/sessions/sess_abc123/events?type=response"
+```

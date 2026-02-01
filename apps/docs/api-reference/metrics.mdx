@@ -1,0 +1,206 @@
+---
+title: 'Metrics API'
+description: 'Query aggregated metrics'
+---
+
+## Get Metrics
+
+<Card>
+  <strong>GET</strong> /v1/metrics
+</Card>
+
+Retrieve aggregated metrics over time.
+
+### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `start` | datetime | Start of time range |
+| `end` | datetime | End of time range |
+| `range` | string | Relative time range (`1h`, `6h`, `24h`, `7d`, `30d`) |
+| `granularity` | string | Aggregation granularity (`minute`, `hour`, `day`) |
+| `groupBy` | string | Group results by (`model`, `feature`, `user`) |
+
+### Response
+
+```json
+{
+  "range": "24h",
+  "granularity": "hour",
+  "data": [
+    {
+      "timestamp": "2026-01-28T10:00:00Z",
+      "sessions": 45,
+      "events": 320,
+      "errors": 2,
+      "totalTokens": 125000,
+      "totalCost": 0.625,
+      "avgLatencyMs": 850,
+      "p95LatencyMs": 1200
+    },
+    {
+      "timestamp": "2026-01-28T11:00:00Z",
+      "sessions": 52,
+      "events": 380,
+      "errors": 1,
+      "totalTokens": 142000,
+      "totalCost": 0.71,
+      "avgLatencyMs": 780,
+      "p95LatencyMs": 1100
+    }
+  ],
+  "totals": {
+    "sessions": 97,
+    "events": 700,
+    "errors": 3,
+    "totalTokens": 267000,
+    "totalCost": 1.335,
+    "avgLatencyMs": 815
+  }
+}
+```
+
+### Example
+
+```bash
+curl -H "Authorization: Bearer ao_your_api_key" \
+  "https://api.agentops.dev/v1/metrics?range=24h&granularity=hour"
+```
+
+---
+
+## Get Cost Metrics
+
+<Card>
+  <strong>GET</strong> /v1/metrics/cost
+</Card>
+
+Retrieve cost breakdown by dimension.
+
+### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `start` | datetime | Start of time range |
+| `end` | datetime | End of time range |
+| `range` | string | Relative time range |
+| `groupBy` | string | Group by (`model`, `feature`, `user`) |
+
+### Response
+
+```json
+{
+  "range": "24h",
+  "groupBy": "model",
+  "data": [
+    {
+      "group": "gpt-4o",
+      "cost": 0.85,
+      "tokens": 170000,
+      "percentage": 63.7
+    },
+    {
+      "group": "claude-3-5-sonnet",
+      "cost": 0.35,
+      "tokens": 70000,
+      "percentage": 26.2
+    },
+    {
+      "group": "gpt-4o-mini",
+      "cost": 0.135,
+      "tokens": 27000,
+      "percentage": 10.1
+    }
+  ],
+  "total": 1.335
+}
+```
+
+### Example
+
+```bash
+curl -H "Authorization: Bearer ao_your_api_key" \
+  "https://api.agentops.dev/v1/metrics/cost?range=7d&groupBy=feature"
+```
+
+---
+
+## Get Token Metrics
+
+<Card>
+  <strong>GET</strong> /v1/metrics/tokens
+</Card>
+
+Retrieve token usage breakdown.
+
+### Response
+
+```json
+{
+  "range": "24h",
+  "groupBy": "model",
+  "data": [
+    {
+      "group": "gpt-4o",
+      "promptTokens": 100000,
+      "completionTokens": 70000,
+      "total": 170000
+    },
+    {
+      "group": "claude-3-5-sonnet",
+      "promptTokens": 45000,
+      "completionTokens": 25000,
+      "total": 70000
+    }
+  ],
+  "totals": {
+    "promptTokens": 163000,
+    "completionTokens": 104000,
+    "total": 267000
+  }
+}
+```
+
+---
+
+## Get Latency Metrics
+
+<Card>
+  <strong>GET</strong> /v1/metrics/latency
+</Card>
+
+Retrieve latency percentiles.
+
+### Response
+
+```json
+{
+  "range": "24h",
+  "groupBy": "model",
+  "data": [
+    {
+      "group": "gpt-4o",
+      "p50": 650,
+      "p75": 850,
+      "p95": 1200,
+      "p99": 1800,
+      "avg": 750
+    },
+    {
+      "group": "claude-3-5-sonnet",
+      "p50": 580,
+      "p75": 720,
+      "p95": 1050,
+      "p99": 1500,
+      "avg": 680
+    }
+  ],
+  "overall": {
+    "p50": 550,
+    "p75": 750,
+    "p95": 1100,
+    "p99": 1650,
+    "avg": 650
+  }
+}
+```
