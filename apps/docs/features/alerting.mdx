@@ -1,0 +1,218 @@
+---
+title: 'Alerting'
+description: 'Real-time notifications for critical events'
+---
+
+## Overview
+
+Alerting helps you catch issues before they impact users. Set up rules to monitor error rates, latency, costs, and custom metrics.
+
+## Alert Types
+
+### Error Rate
+
+Alert when errors exceed a threshold:
+
+```json
+{
+  "name": "High Error Rate",
+  "metric": "error_rate",
+  "condition": {
+    "operator": "gt",
+    "threshold": 5,
+    "window": "5m"
+  },
+  "severity": "critical"
+}
+```
+
+### Latency
+
+Alert on slow responses:
+
+```json
+{
+  "name": "High P95 Latency",
+  "metric": "latency_p95",
+  "condition": {
+    "operator": "gt",
+    "threshold": 3000,
+    "window": "5m"
+  },
+  "severity": "warning"
+}
+```
+
+### Cost
+
+Alert on spending anomalies:
+
+```json
+{
+  "name": "Daily Budget Warning",
+  "metric": "daily_cost",
+  "condition": {
+    "operator": "gt",
+    "threshold": 80,
+    "window": "1d"
+  },
+  "severity": "warning"
+}
+```
+
+### Quality
+
+Alert on quality score drops:
+
+```json
+{
+  "name": "Quality Degradation",
+  "metric": "avg_quality_score",
+  "condition": {
+    "operator": "lt",
+    "threshold": 6.0,
+    "window": "1h"
+  },
+  "severity": "warning"
+}
+```
+
+## Notification Channels
+
+### Email
+
+Receive alerts via email:
+
+```json
+{
+  "channel": "email",
+  "recipients": ["alerts@company.com", "oncall@company.com"]
+}
+```
+
+### Slack
+
+Post to Slack channels:
+
+```json
+{
+  "channel": "slack",
+  "webhook_url": "https://hooks.slack.com/services/xxx/yyy/zzz",
+  "mention": "@oncall"
+}
+```
+
+### Webhooks
+
+Custom webhook integration:
+
+```json
+{
+  "channel": "webhook",
+  "url": "https://your-service.com/alerts",
+  "headers": {
+    "Authorization": "Bearer xxx"
+  }
+}
+```
+
+### PagerDuty
+
+Integration with PagerDuty:
+
+```json
+{
+  "channel": "pagerduty",
+  "routing_key": "xxx",
+  "severity_mapping": {
+    "critical": "critical",
+    "warning": "warning"
+  }
+}
+```
+
+## Alert Conditions
+
+### Operators
+
+| Operator | Description |
+|----------|-------------|
+| `gt` | Greater than |
+| `gte` | Greater than or equal |
+| `lt` | Less than |
+| `lte` | Less than or equal |
+| `eq` | Equal to |
+| `change_pct` | Percentage change |
+
+### Time Windows
+
+- `1m` - 1 minute
+- `5m` - 5 minutes
+- `15m` - 15 minutes
+- `1h` - 1 hour
+- `1d` - 1 day
+
+### Aggregations
+
+- `avg` - Average value
+- `sum` - Sum of values
+- `min` - Minimum value
+- `max` - Maximum value
+- `count` - Count of events
+- `p95` - 95th percentile
+- `p99` - 99th percentile
+
+## Managing Alerts
+
+### Create Alert
+
+```typescript
+// Via API
+const alert = await api.alerts.create({
+  name: 'High Error Rate',
+  metric: 'error_rate',
+  condition: { operator: 'gt', threshold: 5 },
+  channels: ['email', 'slack'],
+  severity: 'critical',
+});
+```
+
+### Update Alert
+
+```typescript
+await api.alerts.update({
+  alertId: 'alert_123',
+  enabled: false,
+});
+```
+
+### Delete Alert
+
+```typescript
+await api.alerts.delete({ alertId: 'alert_123' });
+```
+
+## Alert History
+
+View triggered alerts:
+
+```typescript
+const history = await api.alerts.history({
+  range: '7d',
+  status: 'triggered',
+});
+
+// Returns:
+// - When alert triggered
+// - When resolved
+// - Metric value at trigger
+// - Notifications sent
+```
+
+## Best Practices
+
+1. **Start conservative** - Begin with loose thresholds, tighten over time
+2. **Use severity appropriately** - Critical for user-impacting issues only
+3. **Avoid alert fatigue** - Don't create too many alerts
+4. **Include context** - Add runbook links in alert descriptions
+5. **Test alerts** - Use the "Test" button before enabling

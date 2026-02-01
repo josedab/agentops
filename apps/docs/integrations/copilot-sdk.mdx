@@ -1,0 +1,123 @@
+---
+title: 'GitHub Copilot SDK'
+description: 'Integrate AgentOps with GitHub Copilot SDK'
+---
+
+## Overview
+
+AgentOps provides first-class support for the GitHub Copilot SDK, automatically tracking all sessions, messages, and tool calls.
+
+## Installation
+
+```bash
+npm install @agentops/sdk @github/copilot-sdk
+```
+
+## Quick Start
+
+```typescript
+import { CopilotClient } from '@github/copilot-sdk';
+import { AgentOps } from '@agentops/sdk';
+
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY,
+});
+
+// Wrap your Copilot client
+const client = agentops.wrap(new CopilotClient(), {
+  featureId: 'copilot-assistant',
+});
+
+// All sessions are automatically tracked
+const session = await client.createSession({
+  model: 'claude-3-5-sonnet',
+});
+
+const response = await session.sendAndWait('Help me refactor this code');
+```
+
+## What Gets Tracked
+
+When you wrap a Copilot client, AgentOps automatically captures:
+
+| Event | Description |
+|-------|-------------|
+| Session creation | Model, configuration, user context |
+| Messages sent | User prompts, system messages |
+| Responses | AI responses, token counts, latency |
+| Tool calls | MCP tool invocations and results |
+| Errors | Exceptions and error messages |
+
+## Session Metadata
+
+Add metadata to attribute sessions:
+
+```typescript
+const client = agentops.wrap(new CopilotClient(), {
+  userId: 'user_123',
+  featureId: 'code-review',
+  tags: ['production', 'enterprise'],
+  metadata: {
+    environment: 'vscode',
+    extensionVersion: '1.2.3',
+  },
+});
+```
+
+## Tool Tracking
+
+MCP tool calls are automatically tracked:
+
+```typescript
+// Tool calls and results are captured automatically
+const response = await session.sendAndWait('Search the web for React tutorials', {
+  tools: [webSearchTool, fileReadTool],
+});
+
+// In the dashboard, you'll see:
+// - tool_call: web_search with input parameters
+// - tool_result: web_search with output and duration
+```
+
+## Streaming Support
+
+Streaming responses are handled automatically:
+
+```typescript
+const stream = await session.send('Tell me about TypeScript');
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.content);
+}
+// Final event tracked with complete response and metrics
+```
+
+## Multi-turn Conversations
+
+Each message in a conversation is tracked with parent-child relationships:
+
+```typescript
+const session = await client.createSession({ model: 'gpt-4o' });
+
+// Each exchange creates linked events
+await session.sendAndWait('What is TypeScript?');
+await session.sendAndWait('How does it compare to JavaScript?');
+await session.sendAndWait('Show me an example');
+
+// Dashboard shows full conversation tree
+```
+
+## Error Handling
+
+Errors are automatically captured with context:
+
+```typescript
+try {
+  await session.sendAndWait('Process this file');
+} catch (error) {
+  // Error automatically tracked with:
+  // - Error type and message
+  // - Stack trace
+  // - Request context
+}
+```

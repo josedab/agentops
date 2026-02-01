@@ -1,0 +1,149 @@
+---
+title: 'Cost Tracking'
+description: 'Monitor and optimize AI spending'
+---
+
+## Overview
+
+Cost tracking gives you complete visibility into your AI spending, helping you understand where money goes and how to optimize.
+
+## Automatic Cost Calculation
+
+AgentOps automatically calculates costs based on:
+
+- **Model** - Different pricing per model
+- **Tokens** - Input and output token counts
+- **Provider** - OpenAI, Anthropic, etc.
+
+```typescript
+const response = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'Hello!' }],
+});
+
+// AgentOps automatically tracks:
+// - Prompt tokens: 10
+// - Completion tokens: 15
+// - Cost: $0.000125
+```
+
+## Supported Models
+
+### OpenAI
+
+| Model | Input (1K) | Output (1K) |
+|-------|------------|-------------|
+| gpt-4o | $0.005 | $0.015 |
+| gpt-4o-mini | $0.00015 | $0.0006 |
+| gpt-4-turbo | $0.01 | $0.03 |
+| o1 | $0.015 | $0.06 |
+| o1-mini | $0.003 | $0.012 |
+
+### Anthropic
+
+| Model | Input (1K) | Output (1K) |
+|-------|------------|-------------|
+| claude-3-5-sonnet | $0.003 | $0.015 |
+| claude-3-5-haiku | $0.001 | $0.005 |
+| claude-3-opus | $0.015 | $0.075 |
+
+## Cost Attribution
+
+### By Feature
+
+Track costs per feature or flow:
+
+```typescript
+const client = agentops.wrap(new OpenAI(), {
+  featureId: 'code-review',
+});
+
+// All costs attributed to 'code-review'
+```
+
+Dashboard shows cost breakdown by feature:
+- Chat: $45.23 (35%)
+- Code Review: $32.10 (25%)
+- Summarization: $25.67 (20%)
+
+### By User
+
+Track costs per user:
+
+```typescript
+const client = agentops.wrap(new OpenAI(), {
+  userId: 'user_123',
+});
+
+// Costs attributed to user_123
+```
+
+### By Model
+
+See which models drive costs:
+- gpt-4o: $85.50 (65%)
+- claude-3-5-sonnet: $35.20 (27%)
+- gpt-4o-mini: $10.30 (8%)
+
+## Cost Budgets
+
+Set spending limits:
+
+```typescript
+// In dashboard settings
+{
+  dailyBudget: 100,      // $100/day
+  monthlyBudget: 2500,   // $2500/month
+  alertThreshold: 80,    // Alert at 80%
+}
+```
+
+## Cost Alerts
+
+Get notified when spending exceeds thresholds:
+
+- **Daily budget** - Alert when approaching limit
+- **Unusual spike** - Detect anomalies
+- **Per-user limit** - Cap individual usage
+
+## Cost Optimization
+
+### Identify Expensive Operations
+
+Dashboard highlights:
+- Most expensive sessions
+- Features with highest cost/request
+- Users with unusual spending
+
+### Compare Models
+
+See cost vs. quality tradeoffs:
+
+| Model | Avg Cost | Avg Quality | Latency |
+|-------|----------|-------------|---------|
+| gpt-4o | $0.012 | 8.5 | 1.2s |
+| gpt-4o-mini | $0.001 | 7.2 | 0.3s |
+| claude-3-5-sonnet | $0.008 | 8.3 | 0.9s |
+
+### Caching Opportunities
+
+Identify repeated prompts that could be cached:
+
+- Same prompt hash appearing multiple times
+- Suggestions for semantic caching
+
+## Cost Reports
+
+Export cost data for analysis:
+
+```bash
+# Export monthly costs
+GET /v1/metrics/cost?range=30d&groupBy=feature&format=csv
+```
+
+Available dimensions:
+- Time (hourly, daily, weekly)
+- Feature
+- User
+- Model
+- Environment

@@ -1,0 +1,147 @@
+---
+title: 'Anthropic'
+description: 'Integrate AgentOps with Anthropic Claude'
+---
+
+## Overview
+
+AgentOps provides seamless integration with Anthropic's Claude API, automatically tracking all messages, tool use, and costs.
+
+## Installation
+
+```bash
+npm install @agentops/sdk @anthropic-ai/sdk
+```
+
+## Quick Start
+
+```typescript
+import Anthropic from '@anthropic-ai/sdk';
+import { AgentOps } from '@agentops/sdk';
+
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY,
+});
+
+// Wrap your Anthropic client
+const anthropic = agentops.wrap(new Anthropic());
+
+// All calls are automatically tracked
+const response = await anthropic.messages.create({
+  model: 'claude-3-5-sonnet-20241022',
+  max_tokens: 1024,
+  messages: [{ role: 'user', content: 'Hello!' }],
+});
+```
+
+## Supported Methods
+
+| Method | Auto-tracked |
+|--------|--------------|
+| `messages.create` | ✅ |
+| `messages.create` (streaming) | ✅ |
+| `messages.stream` | ✅ |
+
+## Tool Use
+
+Claude's tool use is automatically tracked:
+
+```typescript
+const response = await anthropic.messages.create({
+  model: 'claude-3-5-sonnet-20241022',
+  max_tokens: 1024,
+  tools: [{
+    name: 'get_weather',
+    description: 'Get weather for a location',
+    input_schema: {
+      type: 'object',
+      properties: {
+        location: { type: 'string' },
+      },
+      required: ['location'],
+    },
+  }],
+  messages: [{ role: 'user', content: 'Weather in Tokyo?' }],
+});
+
+// AgentOps tracks:
+// - Initial message
+// - Response with tool_use blocks
+// - Tool results when provided
+// - Final response
+```
+
+## Streaming
+
+Streaming is fully supported:
+
+```typescript
+const stream = await anthropic.messages.stream({
+  model: 'claude-3-5-sonnet-20241022',
+  max_tokens: 1024,
+  messages: [{ role: 'user', content: 'Write a haiku' }],
+});
+
+for await (const event of stream) {
+  if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+    process.stdout.write(event.delta.text);
+  }
+}
+
+// Tracked with complete response and metrics
+```
+
+## Cost Tracking
+
+Costs are calculated for all Claude models:
+
+| Model | Input (per 1K) | Output (per 1K) |
+|-------|----------------|-----------------|
+| claude-3-5-sonnet | $0.003 | $0.015 |
+| claude-3-5-haiku | $0.001 | $0.005 |
+| claude-3-opus | $0.015 | $0.075 |
+| claude-3-sonnet | $0.003 | $0.015 |
+| claude-3-haiku | $0.00025 | $0.00125 |
+
+## Multi-turn Conversations
+
+Track complete conversations:
+
+```typescript
+const messages = [];
+
+// First turn
+messages.push({ role: 'user', content: 'What is quantum computing?' });
+const r1 = await anthropic.messages.create({
+  model: 'claude-3-5-sonnet-20241022',
+  max_tokens: 1024,
+  messages,
+});
+messages.push({ role: 'assistant', content: r1.content[0].text });
+
+// Second turn
+messages.push({ role: 'user', content: 'How does it differ from classical computing?' });
+const r2 = await anthropic.messages.create({
+  model: 'claude-3-5-sonnet-20241022',
+  max_tokens: 1024,
+  messages,
+});
+
+// Both turns tracked in same session
+```
+
+## Python
+
+```python
+from anthropic import Anthropic
+import agentops
+
+agentops.init()
+client = agentops.wrap(Anthropic())
+
+response = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```

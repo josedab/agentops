@@ -1,0 +1,157 @@
+---
+title: 'Session Tracing'
+description: 'Visualize and debug complete agent interactions'
+---
+
+## Overview
+
+Session tracing provides complete visibility into your AI agent's decision-making process, from initial prompt to final response.
+
+## What is a Session?
+
+A session represents a complete interaction between a user and your AI system. It captures:
+
+- **Timeline** - Every event in chronological order
+- **Hierarchy** - Parent-child relationships between events
+- **Metrics** - Tokens, cost, latency for each step
+- **Context** - User, feature, and custom metadata
+
+## Automatic Tracking
+
+When you wrap your LLM client, sessions are created automatically:
+
+```typescript
+const client = agentops.wrap(new OpenAI(), {
+  userId: 'user_123',
+  featureId: 'chat',
+});
+
+// This creates a new session automatically
+const response = await client.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'Hello!' }],
+});
+```
+
+## Manual Sessions
+
+For more control, create sessions explicitly:
+
+```typescript
+const session = agentops.startSession({
+  userId: 'user_123',
+  featureId: 'complex-workflow',
+  tags: ['production'],
+});
+
+// Track events manually
+session.trackPrompt('Analyze this data');
+session.trackResponse('Analysis complete', { tokens: { ... } });
+
+// End when done
+session.end();
+```
+
+## Event Types
+
+| Type | Description |
+|------|-------------|
+| `session_start` | Session begins |
+| `prompt` | User or system message |
+| `response` | AI response |
+| `tool_call` | Tool/function invocation |
+| `tool_result` | Tool execution result |
+| `error` | Exception or error |
+| `custom` | Your custom events |
+| `session_end` | Session completes |
+
+## Viewing Traces
+
+In the dashboard, sessions are displayed with:
+
+1. **Summary** - Duration, cost, status
+2. **Timeline** - Expandable event list
+3. **Tree View** - Hierarchical event relationships
+4. **Metrics** - Tokens, latency by event
+
+## Filtering Sessions
+
+Find specific sessions with filters:
+
+- **Time range** - Last hour, day, week
+- **Status** - Active, completed, error
+- **User** - Filter by userId
+- **Feature** - Filter by featureId
+- **Tags** - Filter by custom tags
+- **Model** - Filter by LLM model used
+
+## Session Metadata
+
+Add context to sessions for better analysis:
+
+```typescript
+const session = agentops.startSession({
+  userId: 'user_123',
+  featureId: 'onboarding',
+  tags: ['experiment-a', 'premium'],
+  metadata: {
+    source: 'mobile-app',
+    version: '2.1.0',
+    abTest: 'new-flow',
+  },
+});
+```
+
+## Nested Events
+
+Track parent-child relationships:
+
+```typescript
+const promptId = session.trackPrompt('Search for information');
+
+// Tool call linked to prompt
+const toolId = session.trackToolCall('web_search', { query: '...' }, {
+  parentEventId: promptId,
+});
+
+// Result linked to tool call
+session.trackToolResult('web_search', { results: [...] }, {
+  parentEventId: toolId,
+});
+```
+
+## Error Tracking
+
+Errors are captured with full context:
+
+```typescript
+try {
+  await riskyOperation();
+} catch (error) {
+  session.trackError(error, {
+    context: { step: 'data-processing' },
+  });
+  session.end({ status: 'error' });
+}
+```
+
+## Session Stats
+
+Get aggregated session metrics:
+
+```typescript
+const session = agentops.startSession({ ... });
+// ... track events ...
+
+console.log(session.stats);
+// {
+//   eventCount: 12,
+//   promptTokens: 450,
+//   completionTokens: 380,
+//   totalTokens: 830,
+//   totalCost: 0.0124,
+//   durationMs: 3500,
+//   models: ['gpt-4o'],
+//   tools: ['web_search', 'calculator'],
+// }
+```

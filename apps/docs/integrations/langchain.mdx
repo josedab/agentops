@@ -1,0 +1,153 @@
+---
+title: 'LangChain'
+description: 'Integrate AgentOps with LangChain'
+---
+
+## Overview
+
+AgentOps integrates with LangChain through callbacks, providing visibility into chains, agents, and tool executions.
+
+## Installation
+
+```bash
+pip install agentops langchain langchain-openai
+```
+
+## Quick Start
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain.callbacks import BaseCallbackHandler
+import agentops
+
+# Initialize AgentOps
+agentops.init()
+
+# Create LangChain model
+llm = ChatOpenAI(model="gpt-4o")
+
+# Wrap for automatic tracking
+llm = agentops.wrap(llm)
+
+# Use normally
+response = llm.invoke("Hello!")
+```
+
+## Callback Integration
+
+For more control, use the AgentOps callback handler:
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain.schema import HumanMessage
+from agentops.integrations.langchain import AgentOpsCallbackHandler
+
+# Create callback
+callback = AgentOpsCallbackHandler(
+    api_key="ao_your_api_key",
+    tags=["production"],
+)
+
+# Use with LangChain
+llm = ChatOpenAI(model="gpt-4o", callbacks=[callback])
+
+response = llm.invoke([HumanMessage(content="Hello!")])
+```
+
+## Chains
+
+Track complete chain executions:
+
+```python
+from langchain.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain.schema.output_parser import StrOutputParser
+
+prompt = ChatPromptTemplate.from_template("Tell me about {topic}")
+model = ChatOpenAI(model="gpt-4o")
+chain = prompt | model | StrOutputParser()
+
+# Wrap the chain
+chain = agentops.wrap(chain)
+
+# Track full chain execution
+result = chain.invoke({"topic": "quantum computing"})
+```
+
+## Agents
+
+Track agent decision-making and tool usage:
+
+```python
+from langchain.agents import create_openai_tools_agent, AgentExecutor
+from langchain_openai import ChatOpenAI
+from langchain.tools import tool
+
+@tool
+def search(query: str) -> str:
+    """Search the web."""
+    return f"Results for: {query}"
+
+llm = ChatOpenAI(model="gpt-4o")
+agent = create_openai_tools_agent(llm, [search], prompt)
+executor = AgentExecutor(agent=agent, tools=[search])
+
+# Wrap for tracking
+executor = agentops.wrap(executor)
+
+# Agent steps are tracked
+result = executor.invoke({"input": "Search for AI news"})
+```
+
+## What Gets Tracked
+
+| Component | Tracked Data |
+|-----------|--------------|
+| LLM calls | Prompts, responses, tokens, latency |
+| Chains | Input, output, intermediate steps |
+| Agents | Decisions, tool selections, iterations |
+| Tools | Name, input, output, duration |
+| Retrieval | Queries, documents, scores |
+
+## LCEL (LangChain Expression Language)
+
+LCEL chains are fully supported:
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
+
+chain = (
+    ChatPromptTemplate.from_template("Translate to French: {text}")
+    | ChatOpenAI(model="gpt-4o")
+    | StrOutputParser()
+)
+
+chain = agentops.wrap(chain)
+result = chain.invoke({"text": "Hello, world!"})
+```
+
+## RAG Applications
+
+Track retrieval-augmented generation:
+
+```python
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_community.vectorstores import FAISS
+from langchain.chains import RetrievalQA
+
+embeddings = OpenAIEmbeddings()
+vectorstore = FAISS.from_texts(["..."], embeddings)
+retriever = vectorstore.as_retriever()
+
+qa_chain = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(model="gpt-4o"),
+    retriever=retriever,
+)
+
+qa_chain = agentops.wrap(qa_chain)
+
+# Tracked: embedding lookup, retrieval, LLM call
+result = qa_chain.invoke("What is...?")
+```

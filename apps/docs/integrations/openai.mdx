@@ -1,0 +1,144 @@
+---
+title: 'OpenAI'
+description: 'Integrate AgentOps with OpenAI'
+---
+
+## Overview
+
+AgentOps provides seamless integration with OpenAI's API, automatically tracking all chat completions, embeddings, and function calls.
+
+## Installation
+
+```bash
+npm install @agentops/sdk openai
+```
+
+## Quick Start
+
+```typescript
+import OpenAI from 'openai';
+import { AgentOps } from '@agentops/sdk';
+
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY,
+});
+
+// Wrap your OpenAI client
+const openai = agentops.wrap(new OpenAI());
+
+// All calls are automatically tracked
+const response = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'Hello!' }],
+});
+```
+
+## Supported Methods
+
+| Method | Auto-tracked |
+|--------|--------------|
+| `chat.completions.create` | ✅ |
+| `chat.completions.create` (streaming) | ✅ |
+| `embeddings.create` | ✅ |
+| `images.generate` | ✅ |
+| `audio.transcriptions.create` | ✅ |
+
+## Function Calling
+
+Function/tool calls are automatically tracked:
+
+```typescript
+const response = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'What\'s the weather in Paris?' }],
+  tools: [{
+    type: 'function',
+    function: {
+      name: 'get_weather',
+      description: 'Get weather for a location',
+      parameters: {
+        type: 'object',
+        properties: {
+          location: { type: 'string' },
+        },
+      },
+    },
+  }],
+});
+
+// AgentOps tracks:
+// - Initial prompt
+// - Response with tool_calls
+// - Your tool execution (if tracked)
+// - Final response
+```
+
+## Streaming
+
+Streaming responses are fully supported:
+
+```typescript
+const stream = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'Write a poem' }],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content || '');
+}
+
+// Complete response tracked with:
+// - Full concatenated content
+// - Total token count
+// - Time to first token
+// - Total duration
+```
+
+## Cost Tracking
+
+Costs are automatically calculated based on model and token usage:
+
+```typescript
+// After the call, AgentOps calculates:
+// - Input cost: $X based on prompt tokens
+// - Output cost: $Y based on completion tokens
+// - Total cost: $X + $Y
+```
+
+Supported models include:
+- GPT-4o, GPT-4o-mini
+- GPT-4 Turbo, GPT-4
+- GPT-3.5 Turbo
+- o1, o1-mini, o1-preview
+
+## Session Attribution
+
+Group related calls into sessions:
+
+```typescript
+const client = agentops.wrap(new OpenAI(), {
+  userId: 'user_123',
+  featureId: 'chat-bot',
+  tags: ['production'],
+});
+
+// All calls through this client are grouped
+await client.chat.completions.create({ ... });
+await client.chat.completions.create({ ... });
+```
+
+## Python
+
+```python
+from openai import OpenAI
+import agentops
+
+agentops.init()
+client = agentops.wrap(OpenAI())
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
