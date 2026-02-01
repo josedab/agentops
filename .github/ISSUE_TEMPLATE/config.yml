@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://docs.agentops.dev
+    about: Check the documentation for guides and API reference
+  - name: Discord Community
+    url: https://discord.gg/agentops
+    about: Join our Discord for questions and discussions
