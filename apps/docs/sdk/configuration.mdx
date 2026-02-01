@@ -1,0 +1,125 @@
+---
+title: 'Configuration'
+description: 'Configure the AgentOps SDK for your needs'
+---
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `apiKey` | string | - | Your AgentOps API key (required) |
+| `endpoint` | string | `https://ingest.agentops.dev` | Custom ingestion endpoint |
+| `flushInterval` | number | `1000` | Milliseconds between auto-flushes |
+| `maxBatchSize` | number | `100` | Maximum events per batch |
+| `disabled` | boolean | `false` | Disable all tracking |
+| `debug` | boolean | `false` | Enable debug logging |
+
+## Environment Variables
+
+The SDK supports configuration via environment variables:
+
+| Variable | Corresponds to |
+|----------|----------------|
+| `AGENTOPS_API_KEY` | `apiKey` |
+| `AGENTOPS_ENDPOINT` | `endpoint` |
+| `AGENTOPS_FLUSH_INTERVAL` | `flushInterval` |
+| `AGENTOPS_MAX_BATCH_SIZE` | `maxBatchSize` |
+| `AGENTOPS_DISABLED` | `disabled` |
+| `AGENTOPS_DEBUG` | `debug` |
+
+Environment variables are used as defaults. Programmatic configuration takes precedence.
+
+## Session Metadata
+
+When starting a session or wrapping a client, you can provide metadata:
+
+```typescript
+const session = agentops.startSession({
+  // User attribution
+  userId: 'user_123',
+  
+  // Feature/flow identification
+  featureId: 'onboarding_flow',
+  
+  // Tags for filtering
+  tags: ['production', 'v2', 'premium_user'],
+  
+  // Custom metadata
+  metadata: {
+    environment: 'production',
+    version: '1.2.3',
+    experiment: 'new_prompt_v2',
+  },
+});
+```
+
+## Performance Tuning
+
+### High-Volume Applications
+
+For applications with high event volumes:
+
+```typescript
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY,
+  flushInterval: 500,    // Flush more frequently
+  maxBatchSize: 500,     // Larger batches
+});
+```
+
+### Low-Latency Applications
+
+For applications where latency is critical:
+
+```typescript
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY,
+  flushInterval: 5000,   // Less frequent flushes
+  maxBatchSize: 50,      // Smaller batches
+});
+```
+
+## Self-Hosting
+
+For self-hosted deployments, point to your ingestion endpoint:
+
+```typescript
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY,
+  endpoint: 'https://agentops.your-company.com/ingest',
+});
+```
+
+## Debugging
+
+Enable debug mode to see internal SDK logs:
+
+```typescript
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY,
+  debug: true,
+});
+```
+
+Debug logs include:
+- Events being tracked
+- Batch flush information
+- Network request details
+- Error stack traces
+
+## Disabling Tracking
+
+Disable tracking in development or testing:
+
+```typescript
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY,
+  disabled: process.env.NODE_ENV === 'test',
+});
+```
+
+Or via environment variable:
+
+```bash
+AGENTOPS_DISABLED=true npm test
+```

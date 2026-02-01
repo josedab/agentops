@@ -1,0 +1,242 @@
+---
+title: 'Python SDK'
+description: 'Complete guide to the AgentOps Python SDK'
+---
+
+## Quick Start
+
+```python
+import agentops
+from openai import OpenAI
+
+# Initialize AgentOps
+agentops.init(api_key="ao_your_api_key")
+
+# Wrap your OpenAI client
+client = agentops.wrap(OpenAI())
+
+# All calls are automatically tracked
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+## Configuration
+
+```python
+import agentops
+
+agentops.init(
+    api_key="ao_your_api_key",           # Required (or use AGENTOPS_API_KEY env var)
+    endpoint="https://ingest.agentops.dev",  # Custom endpoint
+    flush_interval=1.0,                   # Flush every 1 second
+    max_batch_size=100,                   # Max events per batch
+    disabled=False,                        # Disable tracking
+    debug=False,                           # Enable debug logging
+)
+```
+
+### Environment Variables
+
+```bash
+AGENTOPS_API_KEY=ao_your_api_key
+AGENTOPS_ENDPOINT=https://ingest.agentops.dev
+AGENTOPS_DISABLED=false
+AGENTOPS_DEBUG=false
+```
+
+## Wrapping LLM Clients
+
+### OpenAI
+
+```python
+from openai import OpenAI
+import agentops
+
+agentops.init()
+
+client = agentops.wrap(
+    OpenAI(),
+    user_id="user_123",
+    feature_id="chat",
+    tags=["production"]
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+### Anthropic
+
+```python
+from anthropic import Anthropic
+import agentops
+
+agentops.init()
+
+client = agentops.wrap(
+    Anthropic(),
+    feature_id="code_review"
+)
+
+response = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+## Manual Session Tracking
+
+```python
+import agentops
+
+agentops.init()
+client = agentops.get_client()
+
+# Start a session with context manager
+with client.start_session(
+    user_id="user_123",
+    feature_id="onboarding",
+    tags=["trial"]
+) as session:
+    # Track custom events
+    session.track({
+        "type": "custom",
+        "name": "user_action",
+        "metadata": {"action": "clicked_button"}
+    })
+    
+    # Session automatically ends when exiting context
+
+# Or manually manage the session
+session = client.start_session(user_id="user_123")
+try:
+    # Your code here
+    pass
+finally:
+    session.end()
+```
+
+## Tracking Custom Events
+
+```python
+import agentops
+
+agentops.track({
+    "session_id": "session_123",
+    "type": "custom",
+    "name": "workflow_step",
+    "metadata": {
+        "step": "validation",
+        "result": "success"
+    }
+})
+```
+
+## Async Support
+
+```python
+import asyncio
+import agentops
+from openai import AsyncOpenAI
+
+agentops.init()
+
+async def main():
+    client = agentops.wrap(AsyncOpenAI())
+    
+    response = await client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "Hello!"}]
+    )
+    
+    # Flush before exiting
+    await agentops.flush()
+
+asyncio.run(main())
+```
+
+## Streaming Support
+
+```python
+import agentops
+from openai import OpenAI
+
+agentops.init()
+client = agentops.wrap(OpenAI())
+
+stream = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Tell me a story"}],
+    stream=True
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="")
+
+# Streaming events are automatically tracked
+```
+
+## Error Handling
+
+Errors are automatically tracked:
+
+```python
+import agentops
+from openai import OpenAI
+
+agentops.init()
+client = agentops.wrap(OpenAI())
+
+try:
+    response = client.chat.completions.create(
+        model="invalid-model",
+        messages=[{"role": "user", "content": "Hello!"}]
+    )
+except Exception as e:
+    # Error is automatically tracked with stack trace
+    print(f"Request failed: {e}")
+```
+
+## Graceful Shutdown
+
+```python
+import asyncio
+import agentops
+
+agentops.init()
+
+# At end of script
+asyncio.run(agentops.shutdown())
+```
+
+For long-running applications:
+
+```python
+import signal
+import asyncio
+import agentops
+
+agentops.init()
+
+def shutdown_handler(signum, frame):
+    asyncio.run(agentops.shutdown())
+    exit(0)
+
+signal.signal(signal.SIGTERM, shutdown_handler)
+signal.signal(signal.SIGINT, shutdown_handler)
+```
+
+## Type Hints
+
+The SDK is fully typed for IDE support:
+
+```python
+from agentops import AgentOps, Session, Event, EventType
+from agentops.types import TokenUsage
+```
