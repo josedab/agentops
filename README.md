@@ -21,7 +21,109 @@ AgentOps provides comprehensive monitoring, debugging, and optimization capabili
 - 📈 **Semantic Diff** - Compare agent behavior across versions and deployments
 - 🛡️ **Cost Guardrails** - Real-time spending limits and budget enforcement
 
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Clients["Client Applications"]
+        APP1[Your AI App]
+        APP2[Another App]
+    end
+
+    subgraph SDKs["AgentOps SDKs"]
+        TS["@agentops/sdk<br/>(TypeScript)"]
+        PY["agentops<br/>(Python)"]
+        GO["agentops-go<br/>(Go)"]
+    end
+
+    subgraph Edge["Edge Layer (Cloudflare Workers)"]
+        INGEST[Ingest Service]
+    end
+
+    subgraph Backend["Backend Services"]
+        API[API Server<br/>Hono/Node.js]
+        WEB[Dashboard<br/>Next.js]
+    end
+
+    subgraph Storage["Data Layer"]
+        CH[(ClickHouse<br/>Events & Analytics)]
+        PG[(PostgreSQL<br/>Metadata)]
+        RD[(Redis<br/>Cache)]
+        RP[Redpanda<br/>Event Stream]
+    end
+
+    APP1 --> TS
+    APP2 --> PY
+    APP2 --> GO
+
+    TS --> INGEST
+    PY --> INGEST
+    GO --> INGEST
+
+    INGEST --> RP
+    RP --> CH
+
+    API --> CH
+    API --> PG
+    API --> RD
+
+    WEB --> API
+
+    classDef sdk fill:#e1f5fe,stroke:#01579b
+    classDef edge fill:#fff3e0,stroke:#e65100
+    classDef backend fill:#f3e5f5,stroke:#7b1fa2
+    classDef storage fill:#e8f5e9,stroke:#2e7d32
+
+    class TS,PY,GO sdk
+    class INGEST edge
+    class API,WEB backend
+    class CH,PG,RD,RP storage
+```
+
+## How It Works
+
+AgentOps captures telemetry from your AI applications through a simple instrumentation layer:
+
+1. **Instrumentation** - SDKs automatically capture events (prompts, responses, tool calls, errors) with minimal code changes using wrapper patterns or manual tracking.
+
+2. **Edge Ingestion** - Events are batched and sent to Cloudflare Workers at the edge for low-latency, high-throughput collection. Events are validated, enriched with cost calculations, and forwarded to the streaming layer.
+
+3. **Stream Processing** - Redpanda (Kafka-compatible) provides durable event streaming, enabling real-time processing and reliable delivery to ClickHouse.
+
+4. **Analytics Storage** - ClickHouse stores all events optimized for fast aggregations, enabling sub-second queries across millions of events.
+
+5. **Query & Visualization** - The API server provides REST endpoints for querying data, while the Next.js dashboard offers real-time visualizations, session replay, and debugging tools.
+
+```mermaid
+sequenceDiagram
+    participant App as Your Application
+    participant SDK as AgentOps SDK
+    participant Edge as Ingest (Edge)
+    participant Stream as Redpanda
+    participant DB as ClickHouse
+    participant API as API Server
+    participant UI as Dashboard
+
+    App->>SDK: LLM call (wrapped)
+    SDK->>SDK: Capture event + calculate cost
+    SDK->>SDK: Buffer events
+    SDK->>Edge: POST /v1/events (batch)
+    Edge->>Edge: Validate & enrich
+    Edge->>Stream: Publish events
+    Stream->>DB: Consume & store
+
+    UI->>API: Query sessions
+    API->>DB: Aggregate data
+    DB->>API: Results
+    API->>UI: JSON response
+```
+
 ## Quick Start
+
+### Prerequisites
+
+- Node.js 18+ (20+ recommended)
+- An AgentOps API key ([get one free](https://app.agentops.dev))
 
 ### Installation
 
@@ -317,19 +419,150 @@ pnpm dev
 
 ```
 agentops/
-├── packages/
-│   ├── sdk-ts/          # TypeScript SDK
-│   ├── sdk-python/      # Python SDK (coming soon)
-│   └── shared/          # Shared types and utilities
-├── apps/
-│   ├── web/             # Dashboard (Next.js)
-│   ├── api/             # API server
-│   ├── ingest/          # Ingestion workers
-│   └── docs/            # Documentation
-└── infrastructure/
-    ├── terraform/       # Cloud infrastructure
-    └── docker/          # Local development
+├── packages/                    # SDK packages
+│   ├── sdk-ts/                  # TypeScript SDK (primary)
+│   │   ├── src/
+│   │   │   ├── index.ts         # Main entry point, AgentOps class
+│   │   │   ├── session.ts       # TrackedSession implementation
+│   │   │   ├── transport.ts     # HTTP transport with batching
+│   │   │   ├── buffer.ts        # Event buffering logic
+│   │   │   ├── wrappers/        # Auto-instrumentation wrappers
+│   │   │   │   ├── openai.ts    # OpenAI client wrapper
+│   │   │   │   └── anthropic.ts # Anthropic client wrapper
+│   │   │   └── features/        # Advanced feature modules
+│   │   │       ├── debug-copilot.ts
+│   │   │       ├── semantic-diff.ts
+│   │   │       └── cost-guardrails.ts
+│   │   └── tests/
+│   ├── sdk-python/              # Python SDK
+│   │   └── src/agentops/        # Async-first with httpx + pydantic
+│   ├── sdk-go/                  # Go SDK
+│   │   └── client.go            # Concurrent-safe client
+│   └── shared/                  # Cross-SDK shared code
+│       └── src/
+│           ├── pricing.ts       # Model pricing (50+ models)
+│           ├── errors.ts        # Error hierarchy
+│           └── constants.ts     # API version, event types
+├── apps/                        # Backend services
+│   ├── web/                     # Dashboard (Next.js 15 + tRPC)
+│   │   ├── src/
+│   │   │   ├── app/             # App router pages
+│   │   │   ├── components/      # React components (Radix UI)
+│   │   │   └── server/          # tRPC routers
+│   │   └── public/
+│   ├── api/                     # REST API (Hono + Node.js)
+│   │   └── src/
+│   │       ├── routes/          # /sessions, /metrics, /alerts
+│   │       └── middleware/      # Auth, validation, rate limiting
+│   ├── ingest/                  # Event ingestion (Cloudflare Workers)
+│   │   └── src/
+│   │       ├── index.ts         # Worker entry point
+│   │       └── clickhouse.ts    # ClickHouse writer
+│   └── docs/                    # Documentation (Mintlify)
+├── infrastructure/              # Deployment configuration
+│   ├── docker/                  # Local dev environment
+│   │   └── docker-compose.yml   # ClickHouse, PostgreSQL, Redis, Redpanda
+│   └── terraform/               # AWS infrastructure
+│       ├── main.tf              # VPC, subnets, security groups
+│       ├── clickhouse.tf        # ClickHouse EC2 + NLB
+│       ├── rds.tf               # PostgreSQL RDS
+│       └── elasticache.tf       # Redis cluster
+├── examples/                    # Usage examples
+│   ├── basic-usage.ts
+│   ├── openai-integration.ts
+│   └── agent-with-tools.ts
+└── website/                     # Marketing site
 ```
+
+### Key Components
+
+| Component      | Technology              | Purpose                                                          |
+| -------------- | ----------------------- | ---------------------------------------------------------------- |
+| **sdk-ts**     | TypeScript              | Primary SDK with wrappers for OpenAI, Anthropic, and Copilot SDK |
+| **sdk-python** | Python 3.9+             | Async SDK with httpx, supports LangChain integration             |
+| **sdk-go**     | Go 1.21+                | Lightweight, concurrent-safe SDK                                 |
+| **shared**     | TypeScript              | Canonical pricing data, error types, constants                   |
+| **web**        | Next.js 15, tRPC, Clerk | Real-time dashboard with auth and billing                        |
+| **api**        | Hono, Node.js           | REST API for querying sessions and metrics                       |
+| **ingest**     | Cloudflare Workers      | Edge-deployed event ingestion (<50ms latency)                    |
+| **docs**       | Mintlify                | API reference and integration guides                             |
+
+## Troubleshooting
+
+### Common Issues
+
+#### Events not appearing in dashboard
+
+1. **Check API key** - Ensure `AGENTOPS_API_KEY` is set and valid (starts with `ao_`)
+2. **Verify network** - Confirm your app can reach `https://ingest.agentops.dev`
+3. **Check batching** - Events are batched; call `await agentops.shutdown()` to flush
+4. **Enable debug mode** - Set `debug: true` in config to see SDK logs
+
+```typescript
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY!,
+  debug: true, // Enable verbose logging
+});
+```
+
+#### High latency or timeouts
+
+1. **Reduce batch size** - Lower `maxBatchSize` if payloads are too large
+2. **Increase flush interval** - Set `flushInterval` higher for less frequent sends
+3. **Check for errors** - Monitor `onError` callback for transport issues
+
+```typescript
+const agentops = new AgentOps({
+  apiKey: process.env.AGENTOPS_API_KEY!,
+  maxBatchSize: 50, // Default: 100
+  flushInterval: 5000, // Default: 1000ms
+});
+```
+
+#### Cost tracking shows $0
+
+1. **Verify model name** - Ensure the model name matches our pricing table
+2. **Check token counts** - Tokens must be provided for cost calculation
+3. **Use supported models** - See `@agentops/shared` for 50+ supported models
+
+```typescript
+// Correct: include token usage
+session.trackResponse("Response text", {
+  model: "gpt-4o", // Must match pricing table
+  tokens: { promptTokens: 100, completionTokens: 50, totalTokens: 150 },
+});
+```
+
+#### Docker infrastructure won't start
+
+```bash
+# Reset and rebuild
+cd infrastructure/docker
+docker-compose down -v
+docker-compose up -d
+
+# Check service health
+docker-compose ps
+docker-compose logs clickhouse  # Check specific service
+```
+
+#### Build failures in monorepo
+
+```bash
+# Clean and rebuild
+pnpm clean
+pnpm install
+pnpm build
+
+# Build specific package
+pnpm --filter @agentops/sdk build
+```
+
+### Getting Help
+
+- 📖 Check the [full documentation](https://docs.agentops.dev)
+- 💬 Ask in [Discord](https://discord.gg/agentops)
+- 🐛 File an [issue on GitHub](https://github.com/josedab/agentops/issues)
 
 ## Pricing
 
