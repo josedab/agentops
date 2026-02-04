@@ -1,0 +1,65 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e1b4b"/>
+      <stop offset="50%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#164e63"/>
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#c7d2fe"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Grid pattern overlay -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(99,102,241,0.1)" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  
+  <!-- Logo -->
+  <rect x="80" y="80" width="80" height="80" rx="16" fill="#6366F1"/>
+  <path d="M120 100L148 148H92L120 100Z" fill="white" fill-opacity="0.9"/>
+  <circle cx="120" cy="128" r="8" fill="#6366F1"/>
+  
+  <!-- Title -->
+  <text x="180" y="140" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" fill="white">AgentOps</text>
+  
+  <!-- Main heading -->
+  <text x="80" y="300" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="800" fill="url(#textGradient)">Observability for</text>
+  <text x="80" y="390" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="800" fill="url(#textGradient)">AI Agents</text>
+  
+  <!-- Subtitle -->
+  <text x="80" y="470" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#94a3b8">Monitor, debug, and optimize your AI-powered applications</text>
+  
+  <!-- Feature badges -->
+  <rect x="80" y="520" width="180" height="40" rx="20" fill="rgba(99,102,241,0.3)"/>
+  <text x="170" y="547" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="white" text-anchor="middle">Session Tracing</text>
+  
+  <rect x="280" y="520" width="180" height="40" rx="20" fill="rgba(99,102,241,0.3)"/>
+  <text x="370" y="547" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="white" text-anchor="middle">Cost Attribution</text>
+  
+  <rect x="480" y="520" width="180" height="40" rx="20" fill="rgba(99,102,241,0.3)"/>
+  <text x="570" y="547" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="white" text-anchor="middle">AI Debugging</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="1050" cy="150" r="120" fill="rgba(99,102,241,0.1)"/>
+  <circle cx="1100" cy="400" r="80" fill="rgba(6,182,212,0.1)"/>
+  <circle cx="950" cy="500" r="60" fill="rgba(99,102,241,0.15)"/>
+  
+  <!-- Code snippet decoration -->
+  <rect x="800" y="200" width="320" height="200" rx="12" fill="rgba(0,0,0,0.4)" stroke="rgba(99,102,241,0.3)" stroke-width="2"/>
+  <text x="820" y="240" font-family="monospace" font-size="14" fill="#94a3b8">// Auto-instrument your LLM</text>
+  <text x="820" y="270" font-family="monospace" font-size="14" fill="#818cf8">const</text>
+  <text x="870" y="270" font-family="monospace" font-size="14" fill="white"> openai = agentops.</text>
+  <text x="820" y="300" font-family="monospace" font-size="14" fill="#22d3ee">wrap</text>
+  <text x="870" y="300" font-family="monospace" font-size="14" fill="white">(</text>
+  <text x="885" y="300" font-family="monospace" font-size="14" fill="#818cf8">new</text>
+  <text x="925" y="300" font-family="monospace" font-size="14" fill="#22d3ee"> OpenAI</text>
+  <text x="1005" y="300" font-family="monospace" font-size="14" fill="white">());</text>
+  <text x="820" y="350" font-family="monospace" font-size="14" fill="#94a3b8">// All calls tracked ✨</text>
+</svg>
