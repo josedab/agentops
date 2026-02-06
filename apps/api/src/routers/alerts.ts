@@ -5,6 +5,7 @@
  */
 
 import { Hono } from "hono";
+import type { Env, Variables } from "../index.js";
 import { z } from "zod";
 
 // Schemas
@@ -229,7 +230,7 @@ const mockAlertHistory: AlertHistoryEvent[] = [
 ];
 
 // Router
-const router = new Hono();
+const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 /**
  * GET / - List all alerts

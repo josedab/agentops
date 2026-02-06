@@ -5,6 +5,7 @@
  */
 
 import { Hono } from "hono";
+import type { Env, Variables } from "../index.js";
 import { z } from "zod";
 
 // Schemas
@@ -144,7 +145,7 @@ const mockExportJobs: ExportJobConfig[] = [
 ];
 
 // Router
-const router = new Hono();
+const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 /**
  * GET / - List export jobs
@@ -228,7 +229,7 @@ router.post("/", async (c) => {
     fields: validated.fields ?? null,
     includeEvents: validated.includeEvents,
     callback: validated.callback ?? null,
-    status: "queued" as const,
+    status: "pending" as const,
     progress: 0,
     rowCount: null,
     fileSize: null,

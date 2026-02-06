@@ -5,6 +5,7 @@
  */
 
 import { Hono } from "hono";
+import type { Env, Variables } from "../index.js";
 import { z } from "zod";
 import { createHash, randomBytes } from "crypto";
 
@@ -149,7 +150,7 @@ function generateApiKey(projectId: string): {
 }
 
 // Router
-const router = new Hono();
+const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 /**
  * GET / - List API keys

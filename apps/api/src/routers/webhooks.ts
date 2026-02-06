@@ -5,6 +5,7 @@
  */
 
 import { Hono } from "hono";
+import type { Env, Variables } from "../index.js";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 
@@ -58,7 +59,7 @@ interface WebhookConfig {
   enabled: boolean;
   retryPolicy: { maxRetries: number; retryDelayMs: number };
   lastDeliveryAt: string | null;
-  lastDeliveryStatus: string;
+  lastDeliveryStatus: string | null;
   deliveryCount: number;
   failureCount: number;
   createdAt: string;
@@ -173,7 +174,7 @@ function generateWebhookSecret(): string {
 }
 
 // Router
-const router = new Hono();
+const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 /**
  * GET / - List webhooks

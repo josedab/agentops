@@ -5,6 +5,7 @@
  */
 
 import { Hono } from "hono";
+import type { Env, Variables } from "../index.js";
 import { z } from "zod";
 
 // Schemas
@@ -128,7 +129,7 @@ const mockInvites = [
 ];
 
 // Router
-const router = new Hono();
+const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 /**
  * GET /current - Get current project
@@ -152,7 +153,18 @@ router.patch("/current", async (c) => {
   if (validated.name) mockProject.name = validated.name;
   if (validated.description) mockProject.description = validated.description;
   if (validated.settings) {
-    mockProject.settings = { ...mockProject.settings, ...validated.settings };
+    mockProject.settings = {
+      ...mockProject.settings,
+      ...validated.settings,
+      costAlerts: {
+        ...mockProject.settings.costAlerts,
+        ...validated.settings?.costAlerts,
+      },
+      notifications: {
+        ...mockProject.settings.notifications,
+        ...validated.settings?.notifications,
+      },
+    };
   }
   if (validated.metadata) {
     mockProject.metadata = { ...mockProject.metadata, ...validated.metadata };

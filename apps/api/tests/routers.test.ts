@@ -344,7 +344,7 @@ describe("Export Router", () => {
     });
 
     expect(status).toBe(202);
-    expect(body.data.status).toBe("queued");
+    expect(body.data.status).toBe("pending");
     expect(body.data.estimate).toBeDefined();
   });
 
