@@ -447,6 +447,20 @@ export type {
   GuardrailMiddlewareOptions,
 } from "./guardrails/index.js";
 
+// MCP Tool Observability
+export { MCPObserver } from "./mcp/index.js";
+export type {
+  MCPServerInfo,
+  MCPToolSchema,
+  MCPToolDiscoveryEvent,
+  MCPToolExecutionEvent,
+  MCPServerHealthStatus,
+  MCPToolMetrics,
+  MCPServerMetrics,
+  MCPObservabilityConfig,
+  MCPSchemaValidationResult,
+} from "./mcp/index.js";
+
 // Streaming Traces (Real-time WebSocket)
 export { StreamingClient, StreamingTransport } from "./streaming/index.js";
 export { StreamingError } from "./streaming/index.js";
@@ -529,6 +543,263 @@ export {
   type ParseCorrection,
   type ParserImprovement,
 } from "./nl-alerts/index.js";
+
+// OpenTelemetry Integration
+export {
+  // Core Bridge
+  OTelBridge,
+  createOTelMiddleware,
+  // OTLP Exporter
+  OTelExporter,
+  // Context Propagation
+  W3CTraceContextPropagator,
+  W3CBaggagePropagator,
+  CompositePropagator,
+  generateTraceId,
+  generateSpanId,
+  isValidTraceId,
+  isValidSpanId,
+  parseTraceparent,
+  formatTraceparent,
+  parseBaggage,
+  formatBaggage,
+  TRACE_FLAGS,
+  // Semantic Conventions
+  GEN_AI_ATTRIBUTES,
+  MapContextCarrier,
+  // Backend Adapters & Resource Detection
+  DatadogAdapter,
+  GrafanaTempoAdapter,
+  JaegerAdapter,
+  HoneycombAdapter,
+  NewRelicAdapter,
+  detectResource,
+  OTelMetricsCollector,
+} from "./otel/index.js";
+export type {
+  // Trace Context
+  OTelTraceContext,
+  OTelSpanStatus,
+  OTelSpanKind,
+  // Span Types
+  OTelSpan,
+  OTelSpanEvent,
+  OTelSpanLink,
+  SpanAttributes,
+  SpanBuilder,
+  // Semantic Conventions
+  GenAISystem,
+  GenAIOperationName,
+  // OTLP Protocol
+  OTLPExportTraceRequest,
+  OTLPExportResponse,
+  OTLPResourceSpans,
+  OTLPScopeSpans,
+  OTLPSpan as OTLPProtocolSpan,
+  OTLPSpanEvent as OTLPProtocolSpanEvent,
+  OTLPSpanLink as OTLPProtocolSpanLink,
+  OTLPStatus,
+  OTLPResource,
+  OTLPInstrumentationScope,
+  OTLPKeyValue,
+  OTLPAnyValue,
+  OTLPProtocol,
+  OTLPCompression,
+  OTLPHeaders,
+  // Configuration
+  OTelExporterConfig,
+  ResolvedOTelExporterConfig,
+  OTelBridgeConfig,
+  ResolvedOTelBridgeConfig,
+  // Results and Stats
+  OTelExportResult,
+  OTelExportStats,
+  // Context Carrier
+  ContextCarrier,
+  // Backend Adapter Types
+  BackendAdapter,
+  BackendAdapterConfig,
+  DatadogAdapterOptions,
+  GrafanaTempoAdapterOptions,
+  JaegerAdapterOptions,
+  HoneycombAdapterOptions,
+  NewRelicAdapterOptions,
+  MetricDataPoint as OTelMetricDataPoint,
+  HistogramBucket,
+  MetricsSnapshot,
+} from "./otel/index.js";
+
+// Platform & Multi-Tenancy
+export {
+  TenantManager,
+  APIKeyManager,
+  UsageTracker,
+  RateLimiter,
+  OnboardingManager,
+  PLAN_DEFAULTS,
+} from "./platform/index.js";
+export type {
+  Tenant,
+  TenantSettings,
+  TenantStatus,
+  PlanType,
+  APIKeyRecord,
+  APIKeyValidationResult,
+  UsageRecord as PlatformUsageRecord,
+  UsageLimits,
+  RateLimitConfig,
+  RateLimitResult,
+  OnboardingStep,
+  OnboardingState,
+  PlatformConfig,
+} from "./platform/index.js";
+
+// Agent Framework Instrumentors
+export {
+  BaseInstrumentor,
+  CrewAIInstrumentor,
+  LangGraphInstrumentor,
+  OpenAIAgentsInstrumentor,
+  AutoGenInstrumentor,
+  LlamaIndexInstrumentor,
+  AutoInstrumentor,
+} from "./instrumentors/index.js";
+export type {
+  InstrumentorConfig,
+  InstrumentorHooks,
+  FrameworkInfo,
+  InstrumentorStatus,
+  InstrumentedCall,
+  FrameworkEvent,
+  AgentStep,
+  ToolCallRecord,
+} from "./instrumentors/index.js";
+
+// Evaluation & Benchmark Suite
+export {
+  Evaluator,
+  EvaluationRunner,
+  CIGate,
+  ProductionToEval,
+} from "./evaluation/index.js";
+export type {
+  EvaluatorType,
+  EvaluatorConfig,
+  EvaluationInput,
+  EvaluationScore,
+  EvaluationResult,
+  EvalDataset,
+  EvalSample,
+  EvalRunConfig,
+  EvalRun,
+  EvalRunSummary,
+  CIGateConfig,
+  CIGateResult,
+  LLMJudgeConfig,
+} from "./evaluation/index.js";
+
+// Multi-Agent Topology Visualizer
+export { TopologyTracker } from "./topology/index.js";
+export type {
+  NodeMetrics,
+  TopologyNode,
+  TopologyEdge,
+  GraphMetadata,
+  TopologyGraph,
+  TopologySnapshot,
+  TopologyEvent,
+  ReplayState,
+  CommunicationPattern,
+  BottleneckAnalysis,
+  TopologyConfig,
+} from "./topology/index.js";
+
+// Plugin & Extension Marketplace
+export {
+  PluginSDK,
+  InstrumentorPlugin,
+  EvaluatorPlugin,
+  ExporterPlugin,
+  PluginManager,
+  PluginRegistry,
+} from "./plugins/index.js";
+export type {
+  PluginType,
+  PluginManifest,
+  PluginAuthor,
+  PluginConfigSchema,
+  PluginInstance,
+  PluginHook,
+  PluginLifecycle,
+  PluginContext,
+  PluginLogger,
+  PluginRegistryEntry,
+  PluginSearchQuery,
+  PluginSearchResult,
+  PluginEvent,
+} from "./plugins/index.js";
+
+// Cost Intelligence & FinOps
+export { CostIntelligenceEngine, CostAllocator } from "./finops/index.js";
+export type {
+  CostDataPoint,
+  CostTrend,
+  CostForecast as FinOpsCostForecast,
+  ModelComparison,
+  CachingOpportunity,
+  TokenOptimization,
+  CostAllocationReport,
+  FinOpsBudgetAlert,
+  CostAnomaly,
+  FinOpsConfig,
+  FinOpsDashboard,
+  FinOpsCostSummary,
+} from "./finops/index.js";
+
+// Security & Safety Monitor
+export {
+  ThreatDetector,
+  PIIDetector,
+  SecurityPolicyEngine,
+  SecurityMonitor,
+} from "./security/index.js";
+export type {
+  ThreatType,
+  ThreatSeverity,
+  ThreatDetection,
+  SecurityPolicy as SecuritySafetyPolicy,
+  PolicyRule as SecurityPolicyRule,
+  RuleCondition,
+  PolicyViolation as SecurityPolicyViolation,
+  SecurityScanResult,
+  PIIEntity,
+  PIIScanResult as SecurityPIIScanResult,
+  SecurityIncident,
+  SecurityDashboard,
+  SecurityConfig,
+  PolicyEvaluationResult,
+  IncidentFilter,
+  SecurityStats,
+} from "./security/index.js";
+
+// Prompt Optimization Engine
+export {
+  PromptVersionManager,
+  PromptOptimizer,
+  ABTestRunner,
+} from "./prompt-optimizer/index.js";
+export type {
+  OptimizerPromptVersion,
+  PromptDiff,
+  OptimizationGoal,
+  OptimizerSuggestion,
+  ABTestConfig,
+  ABTestResult,
+  VariantResult,
+  ABVariantMetric,
+  PromptAnalysis,
+  PromptOptimizerConfig,
+} from "./prompt-optimizer/index.js";
 
 // ============================================================================
 // Singleton API
