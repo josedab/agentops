@@ -32,3 +32,6 @@ venv/
 
 # Docker volumes
 infrastructure/docker/data/
+
+# TypeScript build info
+*.tsbuildinfo
