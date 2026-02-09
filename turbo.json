@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"]
     },
     "dev": {
       "cache": false,
@@ -12,7 +12,10 @@
     },
     "test": {
       "dependsOn": ["build"],
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts"]
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
     },
     "lint": {
       "dependsOn": ["^build"]

@@ -6,15 +6,20 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "website"
   ],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "test": "turbo test",
+    "typecheck": "turbo typecheck",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "clean": "turbo clean && rm -rf node_modules",
+    "infra:up": "cd infrastructure/docker && docker compose up -d",
+    "infra:down": "cd infrastructure/docker && docker compose down",
+    "infra:status": "cd infrastructure/docker && docker compose ps",
     "prepare": "husky"
   },
   "lint-staged": {
