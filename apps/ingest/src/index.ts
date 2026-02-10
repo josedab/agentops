@@ -7,7 +7,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { bearerAuth } from "hono/bearer-auth";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { calculateCost, EVENT_TYPES } from "@agentops/shared";

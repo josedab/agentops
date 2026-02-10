@@ -1,7 +1,5 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { bearerAuth } from "hono/bearer-auth";
-import { validator } from "hono/validator";
 import { z } from "zod";
 
 type Bindings = {
