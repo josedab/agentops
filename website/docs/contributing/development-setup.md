@@ -20,7 +20,7 @@ pnpm install
 
 # Start infrastructure
 cd infrastructure/docker
-docker-compose up -d
+docker compose up -d
 cd ../..
 
 # Run tests

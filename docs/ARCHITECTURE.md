@@ -361,7 +361,7 @@ Kafka-compatible message queue for:
 
 ```bash
 cd infrastructure/docker
-docker-compose up -d
+docker compose up -d
 ```
 
 **Services:**
