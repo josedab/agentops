@@ -35,6 +35,16 @@ export {
 // Semantic Conventions
 export { GEN_AI_ATTRIBUTES, MapContextCarrier } from "./types.js";
 
+// Native Export (enhanced exporter)
+export { OTelNativeExporter } from "./native-export.js";
+export type {
+  BackendName,
+  BackendOptions,
+  RetryPolicy,
+  HealthCheckResult,
+  ExportMetrics,
+} from "./native-export.js";
+
 // Backend Adapters & Resource Detection
 export {
   DatadogAdapter,
