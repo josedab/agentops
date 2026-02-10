@@ -404,16 +404,14 @@ console.log("By user:", summary.byUser);
 git clone https://github.com/josedab/agentops.git
 cd agentops
 
-# Install dependencies
-pnpm install
-
-# Start infrastructure (ClickHouse, PostgreSQL, Redis, Redpanda)
-cd infrastructure/docker
-docker-compose up -d
+# One-command setup: installs deps, copies .env files, starts Docker, builds
+pnpm setup
 
 # Start development
 pnpm dev
 ```
+
+> **Manual setup**: If you prefer step-by-step, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Project Structure
 
@@ -422,22 +420,26 @@ agentops/
 ├── packages/                    # SDK packages
 │   ├── sdk-ts/                  # TypeScript SDK (primary)
 │   │   ├── src/
-│   │   │   ├── index.ts         # Main entry point, AgentOps class
+│   │   │   ├── index.ts         # Main entry point & barrel exports
+│   │   │   ├── client.ts        # AgentOps class
 │   │   │   ├── session.ts       # TrackedSession implementation
 │   │   │   ├── transport.ts     # HTTP transport with batching
 │   │   │   ├── buffer.ts        # Event buffering logic
-│   │   │   ├── wrappers/        # Auto-instrumentation wrappers
-│   │   │   │   ├── openai.ts    # OpenAI client wrapper
-│   │   │   │   └── anthropic.ts # Anthropic client wrapper
-│   │   │   └── features/        # Advanced feature modules
-│   │   │       ├── debug-copilot.ts
-│   │   │       ├── semantic-diff.ts
-│   │   │       └── cost-guardrails.ts
+│   │   │   ├── pricing.ts       # Model pricing & cost calculation
+│   │   │   ├── instrumentors/   # Auto-instrumentation (OpenAI, Anthropic)
+│   │   │   ├── streaming/       # Real-time event streaming
+│   │   │   ├── guardrails/      # Cost guardrails engine
+│   │   │   ├── semantic-diff/   # Behavior comparison engine
+│   │   │   ├── copilot/         # AI debugging copilot
+│   │   │   ├── otel/            # OpenTelemetry integration
+│   │   │   └── ...              # 30+ feature modules
 │   │   └── tests/
 │   ├── sdk-python/              # Python SDK
 │   │   └── src/agentops/        # Async-first with httpx + pydantic
-│   ├── sdk-go/                  # Go SDK
-│   │   └── client.go            # Concurrent-safe client
+│   ├── sdk-go/                  # Go SDK (flat layout)
+│   │   ├── client.go            # Concurrent-safe client
+│   │   ├── session.go           # Session tracking
+│   │   └── openai.go            # OpenAI wrapper
 │   └── shared/                  # Cross-SDK shared code
 │       └── src/
 │           ├── pricing.ts       # Model pricing (50+ models)
@@ -445,33 +447,33 @@ agentops/
 │           └── constants.ts     # API version, event types
 ├── apps/                        # Backend services
 │   ├── web/                     # Dashboard (Next.js 15 + tRPC)
-│   │   ├── src/
-│   │   │   ├── app/             # App router pages
-│   │   │   ├── components/      # React components (Radix UI)
-│   │   │   └── server/          # tRPC routers
-│   │   └── public/
+│   │   └── src/
+│   │       ├── app/             # App router pages
+│   │       ├── components/      # React components (Radix UI)
+│   │       └── server/          # tRPC routers
 │   ├── api/                     # REST API (Hono + Node.js)
 │   │   └── src/
-│   │       ├── routes/          # /sessions, /metrics, /alerts
-│   │       └── middleware/      # Auth, validation, rate limiting
+│   │       ├── index.ts         # Server entry point & routes
+│   │       └── routers/         # /sessions, /metrics, /alerts
 │   ├── ingest/                  # Event ingestion (Cloudflare Workers)
 │   │   └── src/
 │   │       ├── index.ts         # Worker entry point
-│   │       └── clickhouse.ts    # ClickHouse writer
+│   │       └── api.ts           # Ingestion routes
 │   └── docs/                    # Documentation (Mintlify)
 ├── infrastructure/              # Deployment configuration
 │   ├── docker/                  # Local dev environment
 │   │   └── docker-compose.yml   # ClickHouse, PostgreSQL, Redis, Redpanda
 │   └── terraform/               # AWS infrastructure
-│       ├── main.tf              # VPC, subnets, security groups
-│       ├── clickhouse.tf        # ClickHouse EC2 + NLB
-│       ├── rds.tf               # PostgreSQL RDS
-│       └── elasticache.tf       # Redis cluster
-├── examples/                    # Usage examples
+├── examples/                    # Usage examples (TS + Python)
 │   ├── basic-usage.ts
 │   ├── openai-integration.ts
-│   └── agent-with-tools.ts
-└── website/                     # Marketing site
+│   ├── agent-with-tools.ts
+│   └── code-reviewer.py
+├── docs/                        # Architecture & SDK docs
+│   ├── ARCHITECTURE.md
+│   ├── adr/                     # Architecture Decision Records
+│   └── sdk-*.md                 # Per-language SDK references
+└── website/                     # Marketing site (Docusaurus)
 ```
 
 ### Key Components
@@ -538,12 +540,12 @@ session.trackResponse("Response text", {
 ```bash
 # Reset and rebuild
 cd infrastructure/docker
-docker-compose down -v
-docker-compose up -d
+docker compose down -v
+docker compose up -d
 
 # Check service health
-docker-compose ps
-docker-compose logs clickhouse  # Check specific service
+docker compose ps
+docker compose logs clickhouse  # Check specific service
 ```
 
 #### Build failures in monorepo

@@ -12,6 +12,18 @@ Thank you for your interest in contributing to AgentOps! This document provides 
 
 ### Getting Started
 
+The fastest way to get up and running:
+
+```bash
+git clone https://github.com/josedab/agentops.git
+cd agentops
+pnpm setup      # Installs deps, copies .env files, starts Docker, builds
+pnpm dev        # Start development servers
+```
+
+<details>
+<summary>Manual setup (step-by-step)</summary>
+
 ```bash
 # Clone the repository
 git clone https://github.com/josedab/agentops.git
@@ -20,10 +32,18 @@ cd agentops
 # Install dependencies
 pnpm install
 
+# Copy environment files (review and add your API keys)
+cp apps/web/.env.example apps/web/.env
+cp apps/api/.env.example apps/api/.env
+cp apps/ingest/.env.example apps/ingest/.env
+
 # Start infrastructure (ClickHouse, PostgreSQL, Redis, Redpanda)
 cd infrastructure/docker
-docker-compose up -d
+docker compose up -d
 cd ../..
+
+# Build packages
+pnpm build
 
 # Run tests to verify setup
 pnpm test
@@ -31,6 +51,8 @@ pnpm test
 # Start development
 pnpm dev
 ```
+
+</details>
 
 ## Project Structure
 
