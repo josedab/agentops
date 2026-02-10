@@ -111,7 +111,7 @@ interface PatternMatch {
 const THRESHOLD_PATTERNS: PatternMatch[] = [
   {
     pattern:
-      /(?:when|if|alert when)\s+(.+?)\s+(?:exceeds?|goes?\s+(?:above|over)|is\s+(?:greater|more)\s+than|>)\s+\$?([\d,\.]+)\s*(k|m|%|percent)?/i,
+      /(?:when|if|alert when)\s+(.+?)\s+(?:exceeds?|goes?\s+(?:above|over)|is\s+(?:greater|more)\s+than|>)\s+\$?([\d,.]+)\s*(k|m|%|percent)?/i,
     extract: (match) => {
       // match[1] is metric name, unused for now but captured
       let value = parseFloat(match[2].replace(/,/g, ""));
@@ -131,7 +131,7 @@ const THRESHOLD_PATTERNS: PatternMatch[] = [
   },
   {
     pattern:
-      /(?:when|if|alert when)\s+(.+?)\s+(?:drops?\s+(?:below|under)|falls?\s+(?:below|under)|is\s+(?:less|lower)\s+than|<)\s+\$?([\d,\.]+)\s*(k|m|%|percent)?/i,
+      /(?:when|if|alert when)\s+(.+?)\s+(?:drops?\s+(?:below|under)|falls?\s+(?:below|under)|is\s+(?:less|lower)\s+than|<)\s+\$?([\d,.]+)\s*(k|m|%|percent)?/i,
     extract: (match) => {
       let value = parseFloat(match[2].replace(/,/g, ""));
       const unit = match[3]?.toLowerCase();
@@ -150,7 +150,7 @@ const THRESHOLD_PATTERNS: PatternMatch[] = [
   },
   {
     pattern:
-      /(?:spikes?|increases?|jumps?)\s+(?:by\s+)?(?:more\s+than\s+)?([\d,\.]+)\s*(%|percent)/i,
+      /(?:spikes?|increases?|jumps?)\s+(?:by\s+)?(?:more\s+than\s+)?([\d,.]+)\s*(%|percent)/i,
     extract: (match) => ({
       condition: {
         type: "rate_of_change",
@@ -228,7 +228,7 @@ const NOTIFICATION_PATTERNS: PatternMatch[] = [
     extract: () => ({ notifications: [{ channel: "slack" as const }] }),
   },
   {
-    pattern: /(?:email|mail)\s+(?:me|to\s+)?([\w@\.\-]+)?/i,
+    pattern: /(?:email|mail)\s+(?:me|to\s+)?([\w@.-]+)?/i,
     extract: (match) => ({
       notifications: [
         {
@@ -267,7 +267,7 @@ const FILTER_PATTERNS: PatternMatch[] = [
     }),
   },
   {
-    pattern: /(?:using|with)\s+(?:model\s+)?([a-z0-9\-\.]+)/i,
+    pattern: /(?:using|with)\s+(?:model\s+)?([a-z0-9\-.]+)/i,
     extract: (match) => ({
       filters: [
         { field: "model" as const, operator: "eq" as const, value: match[1] },
@@ -454,7 +454,7 @@ export class NLAlertParser {
     );
 
     switch (ambiguityType) {
-      case "metric":
+      case "metric": {
         const metricDef = this.metrics.find((m) => m.name === resolvedValue);
         if (metricDef) {
           rule.metric = {
@@ -465,6 +465,7 @@ export class NLAlertParser {
           };
         }
         break;
+      }
 
       case "threshold":
         rule.condition = {

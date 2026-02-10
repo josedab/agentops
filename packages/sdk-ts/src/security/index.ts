@@ -116,7 +116,7 @@ export class ThreatDetector {
         description: "DAN (Do Anything Now) mode activation attempt",
       },
       {
-        pattern: /\[system\]|\[INST\]|\<\|system\|>/i,
+        pattern: /\[system\]|\[INST\]|<\|system\|>/i,
         severity: "high",
         description: "Role-switching token injection attempt",
       },
@@ -523,7 +523,7 @@ export class PIIDetector {
       {
         type: "api_key",
         pattern:
-          /\b(?:api[_-]?key|token|secret)[_\s:=]+['"]?([a-zA-Z0-9_\-]{32,})['"]?\b/gi,
+          /\b(?:api[_-]?key|token|secret)[_\s:=]+['"]?([a-zA-Z0-9_-]{32,})['"]?\b/gi,
         confidence: 0.75,
         label: "[API_KEY]",
       },

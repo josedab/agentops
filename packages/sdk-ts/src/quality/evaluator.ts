@@ -250,7 +250,7 @@ Respond in JSON format:
       }));
 
       return { scores: validatedScores };
-    } catch (error) {
+    } catch (_error) {
       // Return default scores on parse error
       return {
         scores: this.config.rubric.criteria.map((c) => ({

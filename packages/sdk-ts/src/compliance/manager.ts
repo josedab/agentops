@@ -29,7 +29,7 @@ const PII_PATTERNS: Record<PIIType, RegExp> = {
   address:
     /\b\d+\s+[A-Za-z]+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Court|Ct)\b/gi,
   date_of_birth:
-    /\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](19|20)\d{2}\b/g,
+    /\b(0?[1-9]|1[0-2])[/-](0?[1-9]|[12]\d|3[01])[/-](19|20)\d{2}\b/g,
   passport: /\b[A-Z]{1,2}\d{6,9}\b/g,
   driver_license: /\b[A-Z]{1,2}\d{5,8}\b/g,
   bank_account: /\b\d{8,17}\b/g,
