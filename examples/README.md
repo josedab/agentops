@@ -19,6 +19,17 @@ export AGENTOPS_API_KEY=ao_your_key_here
 
 ## Running Examples
 
+### Using pnpm workspace (recommended)
+
+```bash
+# From the repository root:
+pnpm --filter @agentops/examples basic
+pnpm --filter @agentops/examples openai
+pnpm --filter @agentops/examples agent
+```
+
+### Using npx directly
+
 ```bash
 # Basic session tracking
 npx tsx examples/basic-usage.ts
