@@ -121,6 +121,21 @@ export type {
   QualityStats,
 } from "./quality/index.js";
 
+// Agent Performance Profiler
+export { ProfilerEngine } from "./profiler/index.js";
+export type {
+  ProfilerConfig,
+  ResolvedProfilerConfig,
+  ProfileNode,
+  ProfileNodeType,
+  ProfileSession,
+  FlameGraphData,
+  FlameGraphEntry,
+  Bottleneck,
+  OptimizationRecommendation,
+  ProfilerMetrics,
+} from "./profiler/index.js";
+
 // Multi-Agent Correlation
 export { TraceManager, ContextPropagator } from "./correlation/index.js";
 export type {
@@ -228,6 +243,22 @@ export type {
   ComplianceConfig,
 } from "./compliance/index.js";
 
+// Audit Report Generator
+export { AuditReportEngine } from "./audit-report/index.js";
+export type {
+  AuditReportConfig,
+  ComplianceFramework,
+  AuditReport,
+  ReportSection,
+  Control,
+  EvidenceItem,
+  ComplianceGap,
+  CompliancePosture,
+  PostureScore,
+  AuditDataSource,
+  AuditReportMetrics,
+} from "./audit-report/index.js";
+
 // Budget & Forecasting
 export { BudgetManager } from "./budget/index.js";
 export type {
@@ -252,6 +283,21 @@ export type {
   UsageRecord,
   RealizedSavings,
 } from "./cost/index.js";
+
+// Route LLM
+export { RouteLLMEngine } from "./route-llm/index.js";
+export type {
+  RouteLLMConfig,
+  ResolvedRouteLLMConfig,
+  ModelProfile,
+  RoutingRequest,
+  RoutingDecision,
+  AlternativeModel,
+  RoutingHistory,
+  ModelPerformanceData,
+  RoutingMetrics,
+  FallbackChain,
+} from "./route-llm/index.js";
 
 // Root Cause Analysis
 export { RootCauseAnalyzer } from "./rca/index.js";
@@ -551,6 +597,8 @@ export {
   createOTelMiddleware,
   // OTLP Exporter
   OTelExporter,
+  // Native Export (enhanced exporter)
+  OTelNativeExporter,
   // Context Propagation
   W3CTraceContextPropagator,
   W3CBaggagePropagator,
@@ -627,6 +675,12 @@ export type {
   MetricDataPoint as OTelMetricDataPoint,
   HistogramBucket,
   MetricsSnapshot,
+  // Native Export Types
+  BackendName,
+  BackendOptions,
+  RetryPolicy,
+  HealthCheckResult,
+  ExportMetrics,
 } from "./otel/index.js";
 
 // Platform & Multi-Tenancy
@@ -782,6 +836,81 @@ export type {
   SecurityStats,
 } from "./security/index.js";
 
+// Agent Autopilot (Self-Healing)
+export { AutopilotEngine } from "./autopilot/index.js";
+export type {
+  AutopilotConfig,
+  ResolvedAutopilotConfig,
+  RemediationPolicy,
+  PolicyTrigger,
+  PolicyMetric,
+  PolicyOperator,
+  RemediationAction,
+  RemediationActionType,
+  RemediationEvent,
+  AutopilotMetrics,
+  SessionHealth,
+  HealthMetricKey,
+  HealthStatus,
+  CircuitBreakerState,
+  CircuitBreakerStateValue,
+} from "./autopilot/index.js";
+
+// Prompt CI/CD Pipeline
+export { PromptCICDEngine } from "./prompt-cicd/index.js";
+export type {
+  PromptTestConfig,
+  PromptTestSuite,
+  PromptTestCase,
+  TestAssertion as PromptTestAssertion,
+  AssertionResult as PromptAssertionResult,
+  TestExecutionResult,
+  TestSuiteResult,
+  CIGateConfig as PromptCIGateConfig,
+  CIGateVerdict,
+  GitHubActionConfig,
+  PromptTestDSL,
+  PromptExecutor,
+} from "./prompt-cicd/index.js";
+
+// Federated Multi-Tenant SaaS
+export { SaaSPlatformEngine } from "./saas/index.js";
+export type {
+  SaaSConfig,
+  RegionConfig,
+  PlanConfig,
+  TenantProvisionRequest,
+  TenantProvisionResult,
+  BillingEvent,
+  UsageMeter,
+  DataResidencyPolicy,
+  FederatedQuery,
+  FederatedQueryResult,
+  SaaSMetrics,
+} from "./saas/index.js";
+
+// Guardrail Marketplace
+export { MarketplaceEngine } from "./marketplace/index.js";
+export type {
+  MarketplaceConfig,
+  MarketplacePackage,
+  PackageAuthor,
+  PackageCategory,
+  PackageVersion,
+  InstalledPackage,
+  GuardrailPackageContent,
+  PolicyDefinition,
+  PolicyType,
+  PolicySeverity,
+  PolicyRule,
+  RubricPackageContent,
+  RubricCriterion as MarketplaceRubricCriterion,
+  PackageSearchQuery,
+  PackageSearchResult,
+  PackageReview,
+  MarketplaceMetrics,
+} from "./marketplace/index.js";
+
 // Prompt Optimization Engine
 export {
   PromptVersionManager,
@@ -800,6 +929,197 @@ export type {
   PromptAnalysis,
   PromptOptimizerConfig,
 } from "./prompt-optimizer/index.js";
+
+// Streaming Trace Debugger
+export { TraceDebuggerEngine } from "./trace-debugger/index.js";
+export type {
+  DebuggerConfig,
+  DebuggerState,
+  DebugStep,
+  StateSnapshot,
+  Breakpoint,
+  BreakpointHit,
+  StepDiff,
+  RerunConfig,
+  RerunResult,
+  DebuggerMetrics,
+} from "./trace-debugger/index.js";
+
+// Multi-Modal Observability
+export { MultiModalEngine } from "./multimodal/index.js";
+export type {
+  MultiModalConfig,
+  ResolvedMultiModalConfig,
+  MediaType,
+  MediaReference,
+  MultiModalEvent,
+  MultiModalTokenUsage,
+  MultiModalCostBreakdown,
+  MediaDiff,
+  MultiModalSessionSummary,
+  ModelModalCapability,
+  MultiModalMetrics,
+} from "./multimodal/index.js";
+
+// Prompt Firewall
+export { PromptFirewallEngine } from "./prompt-firewall/index.js";
+export type {
+  FirewallConfig,
+  ResolvedFirewallConfig,
+  FirewallMode,
+  AttackPattern,
+  AttackCategory,
+  ThreatSeverity as FirewallThreatSeverity,
+  ThreatIncident,
+  PatternMatch,
+  ScanResult,
+  FirewallMetrics,
+} from "./prompt-firewall/index.js";
+
+// Synthetic Agent Testing
+export { SyntheticTestEngine } from "./synthetic/index.js";
+export type {
+  SyntheticConfig,
+  ResolvedSyntheticConfig,
+  Persona,
+  PersonaTrait,
+  SyntheticScenario,
+  ScenarioTurn,
+  TurnAssertion,
+  SyntheticSession,
+  ExecutedTurn,
+  AgentExecutor,
+  LoadTestConfig,
+  LoadTestResult,
+  SyntheticMetrics,
+} from "./synthetic/index.js";
+
+// Semantic Cache (Intelligent Caching Layer)
+export { SemanticCacheEngine } from "./semantic-cache/index.js";
+export type {
+  SemanticCacheConfig,
+  ResolvedSemanticCacheConfig,
+  CacheEntry,
+  CacheLookupResult,
+  CacheSetResult,
+  CacheStats,
+  CacheROI,
+} from "./semantic-cache/index.js";
+
+// Embedded Agent Analytics
+export { EmbedSDKEngine } from "./embed/index.js";
+export type {
+  EmbedConfig,
+  EmbedToken,
+  EmbedScope,
+  WidgetType,
+  WidgetConfig,
+  WidgetTheme,
+  WidgetFilter,
+  WidgetData,
+  SessionTimelineData,
+  CostBreakdownData,
+  QualityScoreData,
+  UsageChartData,
+  ErrorFeedData,
+  EmbedRenderOutput,
+  EmbedMetrics,
+} from "./embed/index.js";
+
+// AI Cost Chargeback System
+export { ChargebackEngine } from "./chargeback/index.js";
+export type {
+  ChargebackConfig,
+  ResolvedChargebackConfig,
+  CostCenter,
+  CostCenterType,
+  AllocationRule,
+  AllocationMethod,
+  CostEntry,
+  Invoice,
+  InvoiceLineItem,
+  CostReport,
+  ChargebackMetrics,
+} from "./chargeback/index.js";
+
+// Live Collaboration Debugger
+export { CollabDebugEngine } from "./collab-debug/index.js";
+export type {
+  CollabDebugConfig,
+  ResolvedCollabDebugConfig,
+  Participant,
+  ParticipantRole,
+  DebugSession,
+  DebugSessionStatus,
+  SharedAnnotation,
+  SharedBreakpoint,
+  ActivityAction,
+  ActivityEntry,
+  InviteToken,
+  CollabDebugMetrics,
+} from "./collab-debug/index.js";
+
+// Federated Learning from Traces
+export { FederatedLearningEngine } from "./federated/index.js";
+export type {
+  FederatedConfig,
+  ResolvedFederatedConfig,
+  TenantContribution,
+  ModelPerformanceReport,
+  InsightType,
+  AggregatedInsight,
+  CommunityRoutingProfile,
+  DifferentialPrivacyParams,
+  PrivacyAuditEntry,
+  FederatedMetrics,
+} from "./federated/index.js";
+
+// Voice/Video Agent Observability
+export { VoiceObservabilityEngine } from "./voice/index.js";
+export type {
+  VoiceConfig,
+  ResolvedVoiceConfig,
+  ConversationSession,
+  ConversationTurn,
+  SentimentScore,
+  ConversationMetricsSnapshot,
+  ConversationQualityScore,
+  VoiceQualityRubric,
+  VoiceQualityDimension,
+  ConversationAnalytics,
+} from "./voice/index.js";
+
+// Agent Workflow Builder
+export { WorkflowEngine } from "./workflow/index.js";
+export type {
+  WorkflowConfig,
+  ResolvedWorkflowConfig,
+  WorkflowNodeType,
+  WorkflowNode,
+  WorkflowEdge,
+  Workflow,
+  WorkflowValidation,
+  WorkflowExecution,
+  WorkflowTemplate,
+  WorkflowMetrics,
+} from "./workflow/index.js";
+
+// Compliance-as-Code
+export { ComplianceCodeEngine } from "./compliance-code/index.js";
+export type {
+  ComplianceCodeConfig,
+  ResolvedComplianceCodeConfig,
+  CompliancePolicy as ComplianceCodePolicy,
+  ComplianceRule,
+  RuleCondition as ComplianceRuleCondition,
+  ComplianceCheck,
+  EvidenceItem as ComplianceEvidenceItem,
+  ComplianceReport,
+  ComplianceFinding,
+  PolicyTemplate,
+  ComplianceGate,
+  ComplianceCodeMetrics,
+} from "./compliance-code/index.js";
 
 // ============================================================================
 // Singleton API
