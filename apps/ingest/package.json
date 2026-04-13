@@ -15,17 +15,17 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "hono": "^4.6.0",
-    "@hono/zod-validator": "^0.4.0",
-    "zod": "^3.24.0",
+    "hono": "^4.12.12",
+    "@hono/zod-validator": "^0.7.6",
+    "zod": "^4.3.6",
     "@agentops/shared": "workspace:*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241127.0",
+    "@cloudflare/workers-types": "^4.20260413.1",
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0",
-    "wrangler": "^3.99.0"
+    "wrangler": "^4.82.0"
   },
   "author": "Jose David Baena",
   "license": "MIT"
